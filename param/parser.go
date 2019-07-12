@@ -200,33 +200,30 @@ func fieldDefaultValue(kind Kind, ptr, offset uintptr) interface{} {
 	}
 }
 
-func getSetter(param string, kind Kind, ptr, offset uintptr, dvalue interface{}, cdt *condition) setter {
+func getSetter(field reflect.StructField, param string, kind Kind, ptr, offset uintptr, dvalue interface{}, cdt *condition) setter {
 	switch kind {
 	case String:
 		return newStringSetter(param, offset, dvalue.(string), cdt)
-	case Int, Int32, Int64, Float32, Float64:
-		return newNumberSetter(kind, param, offset, dvalue, cdt)
+	case Int:
+		return newIntSetter(param, offset, dvalue.(int), cdt)
+	case Int32:
+		return newInt32Setter(param, offset, dvalue.(int32), cdt)
+	case Int64:
+		return newInt64Setter(param, offset, dvalue.(int64), cdt)
+	case Float32:
+		return newFloat32Setter(param, offset, dvalue.(float32), cdt)
+	case Float64:
+		return newFloat64Setter(param, offset, dvalue.(float64), cdt)
 	case Bool:
 		return newBoolSetter(param, offset, dvalue.(bool))
 	case File:
-		setter = newFileSetter(param, cdt)
-		vs.storage = append(vs.storage, newFileStorage(param, offset))
+		return newFileSetter(param, offset, dvalue.(FileHandler), cdt)
 	case TimePtr:
 		layout := field.Tag.Get(TimeLayoutTag)
 		if layout == "" {
 			layout = DefaultTimeLayout
 		}
-		setter = newTimeSetter(param, layout, offset, cdt)
-		// 设置默认时间
-		var defaultTime *time.Time
-		t := *(**time.Time)(unsafe.Pointer(ptr + offset))
-		if t != nil {
-			defaultTime = t
-		} else {
-			now := time.Now()
-			defaultTime = &now
-		}
-		info.Value = defaultTime.Format(layout)
+		return newTimeSetter(param, layout, offset, dvalue.(*time.Time), cdt)
 	case SliceString:
 		setter = newSliceSetter(SliceString, param, offset, cdt)
 		info.Value = (*[]string)(unsafe.Pointer(ptr + offset))
@@ -275,65 +272,142 @@ func newStringSetter(param string, offset uintptr, dvalue string, cdt *condition
 	}
 }
 
-func newNumberSetter(kind Kind, param string, offset uintptr, dvalue interface{}, cdt *condition) setter {
+func newIntSetter(param string, offset uintptr, dvalue int, cdt *condition) setter {
+	return func(begin uintptr, form *multipart.Form) (err error) {
+		valueStr := url.Values(form.Value).Get(param)
+		var value int
+		if valueStr == "" {
+			if dvalue != 0 {
+				value = dvalue
+			}
+		} else {
+			value, err = strconv.Atoi(valueStr)
+			if err != nil {
+				return &ValidatorErr{Field: param, Kind: ConditionInvalidNumber, Message: err.Error()}
+			}
+		}
+		*(*int)(unsafe.Pointer(begin + offset)) = value
+
+		if cdt != nil {
+			err = cdt.validNum(param, valueStr, float64(value))
+			if err == nil {
+				err = cdt.validEnum(param, form.Value[param])
+			}
+			if err != nil {
+				return err
+			}
+		}
+		return
+	}
+}
+
+func newInt32Setter(param string, offset uintptr, dvalue int32, cdt *condition) setter {
+	return func(begin uintptr, form *multipart.Form) (err error) {
+		valueStr := url.Values(form.Value).Get(param)
+		var value int32
+		if valueStr == "" {
+			if dvalue != 0 {
+				value = dvalue
+			}
+		} else {
+			i64, err := strconv.ParseInt(valueStr, 10, 32)
+			if err != nil {
+				return &ValidatorErr{Field: param, Kind: ConditionInvalidNumber, Message: err.Error()}
+			}
+			value = int32(i64)
+		}
+		*(*int32)(unsafe.Pointer(begin + offset)) = value
+
+		if cdt != nil {
+			err = cdt.validNum(param, valueStr, float64(value))
+			if err == nil {
+				err = cdt.validEnum(param, form.Value[param])
+			}
+			if err != nil {
+				return err
+			}
+		}
+		return
+	}
+}
+
+func newInt64Setter(param string, offset uintptr, dvalue int64, cdt *condition) setter {
+	return func(begin uintptr, form *multipart.Form) (err error) {
+		valueStr := url.Values(form.Value).Get(param)
+		var value int64
+		if valueStr == "" {
+			if dvalue != 0 {
+				value = dvalue
+			}
+		} else {
+			value, err = strconv.ParseInt(valueStr, 10, 64)
+			if err != nil {
+				return &ValidatorErr{Field: param, Kind: ConditionInvalidNumber, Message: err.Error()}
+			}
+		}
+		*(*int64)(unsafe.Pointer(begin + offset)) = value
+
+		if cdt != nil {
+			err = cdt.validNum(param, valueStr, float64(value))
+			if err == nil {
+				err = cdt.validEnum(param, form.Value[param])
+			}
+			if err != nil {
+				return err
+			}
+		}
+		return
+	}
+}
+
+func newFloat64Setter(param string, offset uintptr, dvalue float64, cdt *condition) setter {
 	return func(begin uintptr, form *multipart.Form) (err error) {
 		valueStr := url.Values(form.Value).Get(param)
 		var value float64
-		// TODO
-		if valueStr != "" {
-			switch kind {
-			case Float64:
-				value, err = strconv.ParseFloat(valueStr, 64)
-				if err != nil {
-					return &ValidatorErr{Field: param, Kind: ConditionInvalidNumber, Message: err.Error()}
-				}
-				if value == 0 {
-					value = dvalue.(float64)
-				}
-				*(*float64)(unsafe.Pointer(begin + offset)) = value
-			case Float32:
-				value, err = strconv.ParseFloat(valueStr, 32)
-				if err != nil {
-					return &ValidatorErr{Field: param, Kind: ConditionInvalidNumber, Message: err.Error()}
-				}
-				if value == 0 {
-					value = float64(dvalue.(float32))
-				}
-				*(*float32)(unsafe.Pointer(begin + offset)) = float32(value)
-			case Int64:
-				i, err := strconv.ParseInt(valueStr, 10, 64)
-				if err != nil {
-					return &ValidatorErr{Field: param, Kind: ConditionInvalidNumber, Message: err.Error()}
-				}
-				if i == 0 {
-					i = dvalue.(int64)
-				}
-				*(*int64)(unsafe.Pointer(begin + offset)) = i
-				value = float64(i)
-			case Int32:
-				i, err := strconv.ParseInt(valueStr, 10, 32)
-				if err != nil {
-					return &ValidatorErr{Field: param, Kind: ConditionInvalidNumber, Message: err.Error()}
-				}
-				if i == 0 {
-					i = int64(dvalue.(int32))
-				}
-				*(*int32)(unsafe.Pointer(begin + offset)) = int32(i)
-				value = float64(i)
-			case Int:
-				i, err := strconv.Atoi(valueStr)
-				if err != nil {
-					return &ValidatorErr{Field: param, Kind: ConditionInvalidNumber, Message: err.Error()}
-				}
-				if i == 0 {
-					i = dvalue.(int)
-				}
-				*(*int)(unsafe.Pointer(begin + offset)) = i
-				value = float64(i)
+		if valueStr == "" {
+			if dvalue != 0 {
+				value = dvalue
+			}
+		} else {
+			value, err = strconv.ParseFloat(valueStr, 64)
+			if err != nil {
+				return &ValidatorErr{Field: param, Kind: ConditionInvalidNumber, Message: err.Error()}
 			}
 		}
+		*(*float64)(unsafe.Pointer(begin + offset)) = value
+
 		if cdt != nil {
-			err := cdt.validNum(param, valueStr, value)
+			err = cdt.validNum(param, valueStr, value)
+			if err == nil {
+				err = cdt.validEnum(param, form.Value[param])
+			}
+			if err != nil {
+				return err
+			}
+		}
+		return
+	}
+}
+
+func newFloat32Setter(param string, offset uintptr, dvalue float32, cdt *condition) setter {
+	return func(begin uintptr, form *multipart.Form) (err error) {
+		valueStr := url.Values(form.Value).Get(param)
+		var value float32
+		if valueStr == "" {
+			if dvalue != 0 {
+				value = dvalue
+			}
+		} else {
+			f64, err := strconv.ParseFloat(valueStr, 32)
+			if err != nil {
+				return &ValidatorErr{Field: param, Kind: ConditionInvalidNumber, Message: err.Error()}
+			}
+			value = float32(f64)
+		}
+		*(*float32)(unsafe.Pointer(begin + offset)) = value
+
+		if cdt != nil {
+			err = cdt.validNum(param, valueStr, float64(value))
 			if err == nil {
 				err = cdt.validEnum(param, form.Value[param])
 			}
@@ -369,16 +443,26 @@ func newFileStorage(param string, offset uintptr) storage {
 	}
 }
 
-func newFileSetter(param string, cdt *condition) setter {
+func newFileSetter(param string, offset uintptr, dvalue FileHandler, cdt *condition) setter {
 	return func(begin uintptr, form *multipart.Form) (err error) {
 		if cdt != nil {
 			return cdt.validFile(param, form)
+		}
+		handler := *(*FileHandler)(unsafe.Pointer(begin + offset))
+		if handler == nil {
+			handler = dvalue
+		}
+		for _, header := range form.File[param] {
+			err = handler(param, header)
+			if err != nil {
+				return err
+			}
 		}
 		return nil
 	}
 }
 
-func newTimeSetter(param, layout string, offset uintptr, cdt *condition) setter {
+func newTimeSetter(param, layout string, offset uintptr, dvalue *time.Time, cdt *condition) setter {
 	return func(begin uintptr, form *multipart.Form) (err error) {
 		if cdt != nil {
 			err = cdt.validTime(param, form)
@@ -386,17 +470,23 @@ func newTimeSetter(param, layout string, offset uintptr, cdt *condition) setter 
 				return err
 			}
 		}
-		text := []byte(url.Values(form.Value).Get(param))
+		text := url.Values(form.Value).Get(param)
+		var t time.Time
 		if len(text) > 0 {
-			var t time.Time
-			t, err = time.ParseInLocation(layout, string(text), time.Local)
+			t, err = time.Parse(layout, text)
 			if err != nil {
 				return
 			}
-			*(**time.Time)(unsafe.Pointer(begin + offset)) = &t
+		} else {
+			t = time.Unix(0, dvalue.UnixNano())
 		}
+		*(**time.Time)(unsafe.Pointer(begin + offset)) = &t
 		return
 	}
+}
+
+func newSliceStringSetter(param string, offset uintptr, dvalue []string, cdt *condition) {
+
 }
 
 func newSliceSetter(kind Kind, param string, offset uintptr, cdt *condition) setter {
