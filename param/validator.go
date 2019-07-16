@@ -450,6 +450,7 @@ func (re *ValidatorErr) Error() string {
 const (
 	ConditionRequired ConditionKind = iota
 	ConditionInvalidNumber
+	ConditionInvalidBoolean
 	ConditionStringRegexp
 	ConditionStringLength
 	ConditionNumber
@@ -463,6 +464,7 @@ const (
 var Conditions = map[ConditionKind]string{
 	ConditionRequired:       "required",
 	ConditionInvalidNumber:  "invalid-number",
+	ConditionInvalidBoolean: "invalid-boolean",
 	ConditionStringRegexp:   "string-regexp",
 	ConditionStringLength:   "string-length",
 	ConditionNumber:         "number",

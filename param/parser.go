@@ -6,6 +6,7 @@ package param
 
 import (
 	"fmt"
+	"github.com/pkg/errors"
 	"mime/multipart"
 	"net/url"
 	"reflect"
@@ -197,10 +198,12 @@ func fieldDefaultValue(kind Kind, ptr, offset uintptr) interface{} {
 		return (*[]float64)(unsafe.Pointer(ptr + offset))
 	case SliceBool:
 		return (*[]bool)(unsafe.Pointer(ptr + offset))
+	default:
+		return nil
 	}
 }
 
-func getSetter(field reflect.StructField, param string, kind Kind, ptr, offset uintptr, dvalue interface{}, cdt *condition) setter {
+func getSetter(field reflect.StructField, param string, kind Kind, offset uintptr, dvalue interface{}, cdt *condition) setter {
 	switch kind {
 	case String:
 		return newStringSetter(param, offset, dvalue.(string), cdt)
@@ -225,31 +228,24 @@ func getSetter(field reflect.StructField, param string, kind Kind, ptr, offset u
 		}
 		return newTimeSetter(param, layout, offset, dvalue.(*time.Time), cdt)
 	case SliceString:
-		setter = newSliceSetter(SliceString, param, offset, cdt)
-		info.Value = (*[]string)(unsafe.Pointer(ptr + offset))
+		return newSliceStringSetter(param, offset, dvalue.([]string), cdt)
 	case SliceInt:
-		setter = newSliceSetter(SliceInt, param, offset, cdt)
-		info.Value = (*[]int)(unsafe.Pointer(ptr + offset))
+		return newSliceIntSetter(param, offset, dvalue.([]int), cdt)
 	case SliceInt32:
-		setter = newSliceSetter(SliceInt32, param, offset, cdt)
-		info.Value = (*[]int32)(unsafe.Pointer(ptr + offset))
+		return newSliceInt32Setter(param, offset, dvalue.([]int32), cdt)
 	case SliceInt64:
-		setter = newSliceSetter(SliceInt64, param, offset, cdt)
-		info.Value = (*[]int64)(unsafe.Pointer(ptr + offset))
+		return newSliceInt64Setter(param, offset, dvalue.([]int64), cdt)
 	case SliceFloat32:
-		setter = newSliceSetter(SliceFloat32, param, offset, cdt)
-		info.Value = (*[]float32)(unsafe.Pointer(ptr + offset))
+		return newSliceFloat32Setter(param, offset, dvalue.([]float32), cdt)
 	case SliceFloat64:
-		setter = newSliceSetter(SliceFloat64, param, offset, cdt)
-		info.Value = (*[]float64)(unsafe.Pointer(ptr + offset))
+		return newSliceFloat64Setter(param, offset, dvalue.([]float64), cdt)
 	case SliceBool:
-		setter = newSliceSetter(SliceBool, param, offset, cdt)
-		info.Value = (*[]bool)(unsafe.Pointer(ptr + offset))
+		return newSliceBoolSetter(param, offset, dvalue.([]bool), cdt)
+	default:
+		return func(begin uintptr, form *multipart.Form) error {
+			return errors.Errorf("not supported parameter %s kind %s", param, kind)
+		}
 	}
-}
-
-func getStoreFunc(field reflect.StructField) setter {
-
 }
 
 func newStringSetter(param string, offset uintptr, dvalue string, cdt *condition) setter {
@@ -421,25 +417,18 @@ func newFloat32Setter(param string, offset uintptr, dvalue float32, cdt *conditi
 
 func newBoolSetter(param string, offset uintptr, dvalue bool) setter {
 	return func(begin uintptr, form *multipart.Form) (err error) {
+		var value bool
 		valueStr := url.Values(form.Value).Get(param)
-		value := valueStr != "" && valueStr != "false"
-		*(*bool)(unsafe.Pointer(begin + offset)) = value
-		return
-	}
-}
-
-func newFileStorage(param string, offset uintptr) storage {
-	return func(begin uintptr, form *multipart.Form) (err error) {
-		handler := *(*FileHandler)(unsafe.Pointer(begin + offset))
-		if handler != nil {
-			for _, header := range form.File[param] {
-				err = handler(param, header)
-				if err != nil {
-					return err
-				}
+		if valueStr == "" {
+			value = dvalue
+		} else {
+			value, err = strconv.ParseBool(valueStr)
+			if err != nil {
+				return err
 			}
 		}
-		return nil
+		*(*bool)(unsafe.Pointer(begin + offset)) = value
+		return
 	}
 }
 
@@ -485,74 +474,191 @@ func newTimeSetter(param, layout string, offset uintptr, dvalue *time.Time, cdt 
 	}
 }
 
-func newSliceStringSetter(param string, offset uintptr, dvalue []string, cdt *condition) {
-
-}
-
-func newSliceSetter(kind Kind, param string, offset uintptr, cdt *condition) setter {
+func newSliceStringSetter(param string, offset uintptr, dvalue []string, cdt *condition) setter {
 	return func(begin uintptr, form *multipart.Form) (err error) {
 		values := getSliceValues(param, form)
-		if len(values) > 0 {
-			switch kind {
-			case SliceString:
-				*(*[]string)(unsafe.Pointer(begin + offset)) = values
-			case SliceInt:
-				var ints = make([]int, len(values))
-				for idx, value := range values {
-					ints[idx], err = strconv.Atoi(value)
-					if err != nil {
-						return &ValidatorErr{Field: param, Kind: ConditionInvalidNumber, Message: err.Error()}
-					}
-				}
-				*(*[]int)(unsafe.Pointer(begin + offset)) = ints
-			case SliceInt32:
-				var ints = make([]int32, len(values))
-				for idx, value := range values {
-					i32, err := strconv.ParseInt(value, 10, 32)
-					if err != nil {
-						return &ValidatorErr{Field: param, Kind: ConditionInvalidNumber, Message: err.Error()}
-					}
-					ints[idx] = int32(i32)
-				}
-				*(*[]int32)(unsafe.Pointer(begin + offset)) = ints
-			case SliceInt64:
-				var ints = make([]int64, len(values))
-				for idx, value := range values {
-					i64, err := strconv.ParseInt(value, 10, 64)
-					if err != nil {
-						return &ValidatorErr{Field: param, Kind: ConditionInvalidNumber, Message: err.Error()}
-					}
-					ints[idx] = int64(i64)
-				}
-				*(*[]int64)(unsafe.Pointer(begin + offset)) = ints
-			case SliceFloat32:
-				var floats = make([]float32, len(values))
-				for idx, value := range values {
-					f32, err := strconv.ParseFloat(value, 32)
-					if err != nil {
-						return &ValidatorErr{Field: param, Kind: ConditionInvalidNumber, Message: err.Error()}
-					}
-					floats[idx] = float32(f32)
-				}
-				*(*[]float32)(unsafe.Pointer(begin + offset)) = floats
-			case SliceFloat64:
-				var floats = make([]float64, len(values))
-				for idx, value := range values {
-					f64, err := strconv.ParseFloat(value, 64)
-					if err != nil {
-						return &ValidatorErr{Field: param, Kind: ConditionInvalidNumber, Message: err.Error()}
-					}
-					floats[idx] = f64
-				}
-				*(*[]float64)(unsafe.Pointer(begin + offset)) = floats
-			case SliceBool:
-				var bools = make([]bool, len(values))
-				for idx, value := range values {
-					bools[idx] = value != "" && value != "false"
-				}
-				*(*[]bool)(unsafe.Pointer(begin + offset)) = bools
+		if len(dvalue) > 0 && len(values) == 0 {
+			copy(values, dvalue)
+		}
+		*(*[]string)(unsafe.Pointer(begin + offset)) = values
+		if cdt != nil {
+			err = cdt.validItem(param, len(values))
+			if err == nil {
+				err = cdt.validEnum(param, values)
+			}
+			if err != nil {
+				return err
 			}
 		}
+		return
+	}
+}
+
+func newSliceIntSetter(param string, offset uintptr, dvalue []int, cdt *condition) setter {
+	return func(begin uintptr, form *multipart.Form) (err error) {
+		values := getSliceValues(param, form)
+		var ints []int
+		if len(values) > 0 {
+			ints = make([]int, len(values))
+			for idx, value := range values {
+				ints[idx], err = strconv.Atoi(value)
+				if err != nil {
+					return &ValidatorErr{Field: param, Kind: ConditionInvalidNumber, Message: err.Error()}
+				}
+			}
+		} else {
+			copy(ints, dvalue)
+		}
+		*(*[]int)(unsafe.Pointer(begin + offset)) = ints
+		if cdt != nil {
+			err = cdt.validItem(param, len(values))
+			if err == nil {
+				err = cdt.validEnum(param, values)
+			}
+			if err != nil {
+				return err
+			}
+		}
+		return
+	}
+}
+
+func newSliceInt32Setter(param string, offset uintptr, dvalue []int32, cdt *condition) setter {
+	return func(begin uintptr, form *multipart.Form) (err error) {
+		values := getSliceValues(param, form)
+		var ints []int32
+		if len(values) > 0 {
+			ints = make([]int32, len(values))
+			for idx, value := range values {
+				i32, err := strconv.ParseInt(value, 10, 32)
+				if err != nil {
+					return &ValidatorErr{Field: param, Kind: ConditionInvalidNumber, Message: err.Error()}
+				}
+				ints[idx] = int32(i32)
+			}
+		} else {
+			copy(ints, dvalue)
+		}
+		*(*[]int32)(unsafe.Pointer(begin + offset)) = ints
+		if cdt != nil {
+			err = cdt.validItem(param, len(values))
+			if err == nil {
+				err = cdt.validEnum(param, values)
+			}
+			if err != nil {
+				return err
+			}
+		}
+		return
+	}
+}
+
+func newSliceInt64Setter(param string, offset uintptr, dvalue []int64, cdt *condition) setter {
+	return func(begin uintptr, form *multipart.Form) (err error) {
+		values := getSliceValues(param, form)
+		var ints []int64
+		if len(values) > 0 {
+			ints = make([]int64, len(values))
+			for idx, value := range values {
+				i64, err := strconv.ParseInt(value, 10, 64)
+				if err != nil {
+					return &ValidatorErr{Field: param, Kind: ConditionInvalidNumber, Message: err.Error()}
+				}
+				ints[idx] = i64
+			}
+		} else {
+			copy(ints, dvalue)
+		}
+		*(*[]int64)(unsafe.Pointer(begin + offset)) = ints
+		if cdt != nil {
+			err = cdt.validItem(param, len(values))
+			if err == nil {
+				err = cdt.validEnum(param, values)
+			}
+			if err != nil {
+				return err
+			}
+		}
+		return
+	}
+}
+
+func newSliceFloat32Setter(param string, offset uintptr, dvalue []float32, cdt *condition) setter {
+	return func(begin uintptr, form *multipart.Form) (err error) {
+		values := getSliceValues(param, form)
+		var floats []float32
+		if len(values) > 0 {
+			floats = make([]float32, len(values))
+			for idx, value := range values {
+				f32, err := strconv.ParseFloat(value, 32)
+				if err != nil {
+					return &ValidatorErr{Field: param, Kind: ConditionInvalidNumber, Message: err.Error()}
+				}
+				floats[idx] = float32(f32)
+			}
+		} else {
+			copy(floats, dvalue)
+		}
+		*(*[]float32)(unsafe.Pointer(begin + offset)) = floats
+		if cdt != nil {
+			err = cdt.validItem(param, len(values))
+			if err == nil {
+				err = cdt.validEnum(param, values)
+			}
+			if err != nil {
+				return err
+			}
+		}
+		return
+	}
+}
+
+func newSliceFloat64Setter(param string, offset uintptr, dvalue []float64, cdt *condition) setter {
+	return func(begin uintptr, form *multipart.Form) (err error) {
+		values := getSliceValues(param, form)
+		var floats []float64
+		if len(values) > 0 {
+			floats = make([]float64, len(values))
+			for idx, value := range values {
+				f64, err := strconv.ParseFloat(value, 64)
+				if err != nil {
+					return &ValidatorErr{Field: param, Kind: ConditionInvalidNumber, Message: err.Error()}
+				}
+				floats[idx] = f64
+			}
+		} else {
+			copy(floats, dvalue)
+		}
+		*(*[]float64)(unsafe.Pointer(begin + offset)) = floats
+		if cdt != nil {
+			err = cdt.validItem(param, len(values))
+			if err == nil {
+				err = cdt.validEnum(param, values)
+			}
+			if err != nil {
+				return err
+			}
+		}
+		return
+	}
+}
+
+func newSliceBoolSetter(param string, offset uintptr, dvalue []bool, cdt *condition) setter {
+	return func(begin uintptr, form *multipart.Form) (err error) {
+		values := getSliceValues(param, form)
+		var bools []bool
+		if len(values) > 0 {
+			bools = make([]bool, len(values))
+			for idx, value := range values {
+				bools[idx], err = strconv.ParseBool(value)
+				if err != nil {
+					return &ValidatorErr{Field: param, Kind: ConditionInvalidBoolean, Message: err.Error()}
+				}
+			}
+		} else {
+			copy(bools, dvalue)
+		}
+		*(*[]bool)(unsafe.Pointer(begin + offset)) = bools
 		if cdt != nil {
 			err = cdt.validItem(param, len(values))
 			if err == nil {
