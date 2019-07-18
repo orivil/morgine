@@ -22,16 +22,55 @@ const DefaultTimeLayout = "2006-01-02T15:04:05"
 // 时间模板标签名, 设置此标签之后时间按此标签模板解析
 const TimeLayoutTag = "time-layout"
 
+type FieldError struct {
+	Field string
+	Err   string
+}
+
+func (fe *FieldError) Error() string {
+	return fmt.Sprintf("field [%s]: %s", fe.Field, fe.Err)
+}
+
 type Parser interface {
 	Unmarshal(data *multipart.Form, schema interface{}) error
 }
 
 type Schema struct {
-	Pkg        string
-	Name       string
-	Fields     []*Field
-	setters    []setter
-	storeFuncs []setter
+	Pkg    string
+	Name   string
+	Fields []*Field
+}
+
+// 检测是否有文件(FileHandler)字段, 通常有文件数据与无文件数据的数据组织方式是不一样的
+func (s *Schema) HasFileField() bool {
+	for _, field := range s.Fields {
+		if field.Kind == File {
+			return true
+		}
+	}
+	return false
+}
+
+// 验证并解析数据, 该方法直接映射内存, 是不安全的, 使用时一定要保证模型一致.
+// 如果有上传文件, 则先设置数据, 后保存文件
+func (s *Schema) Parse(pointer uintptr, form *multipart.Form) (err error) {
+	for _, field := range s.Fields {
+		if field.Kind != File {
+			err = field.Setter.SetValue(pointer, form)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	for _, field := range s.Fields {
+		if field.Kind == File {
+			err = field.Setter.SetValue(pointer, form)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }
 
 type Field struct {
@@ -44,14 +83,28 @@ type Field struct {
 	// 默认值
 	Value interface{}
 
+	Setter Setter
+
 	// 字段类型
 	Kind Kind
 }
 
+type Setter interface {
+	SetValue(begin uintptr, form *multipart.Form) error
+}
+
 type setter func(begin uintptr, form *multipart.Form) error
+
+func (s setter) SetValue(begin uintptr, form *multipart.Form) error {
+	return s(begin, form)
+}
 
 func NewSchema(v interface{}, validator *Validator, filter *Filter) (*Schema, error) {
 	t := reflect.TypeOf(v)
+	schema := &Schema{
+		Pkg:  t.PkgPath(),
+		Name: t.Name(),
+	}
 	for t.Kind() == reflect.Ptr {
 		t = t.Elem()
 	}
@@ -59,9 +112,6 @@ func NewSchema(v interface{}, validator *Validator, filter *Filter) (*Schema, er
 		return nil, fmt.Errorf("need struct, got %v", t)
 	}
 	ptr := reflect.ValueOf(v).Pointer()
-	//rt := &Type{}
-	//defaultValues := make(map[string][]string, 1)
-	schema := &Schema{}
 	fields := structFields(t, 0)
 	for _, field := range fields {
 		if !isFieldIgnore(field) {
@@ -108,11 +158,7 @@ func NewSchema(v interface{}, validator *Validator, filter *Filter) (*Schema, er
 					}
 				}
 			}
-			switch kind {
-			case File:
-			default:
-
-			}
+			f.Setter = getSetter(field, f.Name, kind, offset, f.Value, cdt)
 			schema.Fields = append(schema.Fields, f)
 		}
 	}
@@ -156,26 +202,26 @@ func fieldDesc(field reflect.StructField) string {
 func fieldDefaultValue(kind Kind, ptr, offset uintptr) interface{} {
 	switch kind {
 	case String:
-		return (*string)(unsafe.Pointer(ptr + offset))
+		return *(*string)(unsafe.Pointer(ptr + offset))
 	case Int:
-		return (*int)(unsafe.Pointer(ptr + offset))
+		return *(*int)(unsafe.Pointer(ptr + offset))
 	case Int32:
-		return (*int32)(unsafe.Pointer(ptr + offset))
+		return *(*int32)(unsafe.Pointer(ptr + offset))
 	case Int64:
-		return (*int64)(unsafe.Pointer(ptr + offset))
+		return *(*int64)(unsafe.Pointer(ptr + offset))
 	case Float32:
-		return (*float32)(unsafe.Pointer(ptr + offset))
+		return *(*float32)(unsafe.Pointer(ptr + offset))
 	case Float64:
-		return (*float64)(unsafe.Pointer(ptr + offset))
+		return *(*float64)(unsafe.Pointer(ptr + offset))
 	case Bool:
-		return (*bool)(unsafe.Pointer(ptr + offset))
+		return *(*bool)(unsafe.Pointer(ptr + offset))
 	case File:
-		handler := (*FileHandler)(unsafe.Pointer(ptr + offset))
+		handler := *(*FileHandler)(unsafe.Pointer(ptr + offset))
 		if handler != nil {
 			return handler
 		}
 		var f FileHandler = func(field string, header *multipart.FileHeader) error {
-			return fmt.Errorf("parameter field [%s], the file handler is nil", field)
+			return &FieldError{Field: field, Err: "file handler is nil"}
 		}
 		return f
 	case TimePtr:
@@ -185,19 +231,19 @@ func fieldDefaultValue(kind Kind, ptr, offset uintptr) interface{} {
 		}
 		return &time.Time{}
 	case SliceString:
-		return (*[]string)(unsafe.Pointer(ptr + offset))
+		return *(*[]string)(unsafe.Pointer(ptr + offset))
 	case SliceInt:
-		return (*[]int)(unsafe.Pointer(ptr + offset))
+		return *(*[]int)(unsafe.Pointer(ptr + offset))
 	case SliceInt32:
-		return (*[]int32)(unsafe.Pointer(ptr + offset))
+		return *(*[]int32)(unsafe.Pointer(ptr + offset))
 	case SliceInt64:
-		return (*[]int64)(unsafe.Pointer(ptr + offset))
+		return *(*[]int64)(unsafe.Pointer(ptr + offset))
 	case SliceFloat32:
-		return (*[]float32)(unsafe.Pointer(ptr + offset))
+		return *(*[]float32)(unsafe.Pointer(ptr + offset))
 	case SliceFloat64:
-		return (*[]float64)(unsafe.Pointer(ptr + offset))
+		return *(*[]float64)(unsafe.Pointer(ptr + offset))
 	case SliceBool:
-		return (*[]bool)(unsafe.Pointer(ptr + offset))
+		return *(*[]bool)(unsafe.Pointer(ptr + offset))
 	default:
 		return nil
 	}
