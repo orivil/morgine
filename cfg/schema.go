@@ -66,6 +66,7 @@ func (cs Configs) GetSliceBool(name string) []bool {
 	return cs[name].([]bool)
 }
 
+// LoadOSEnv for loading the OS environment values
 func (cs Configs) LoadOSEnv() (err error) {
 	for key, value := range cs {
 		osValue := os.Getenv(key)

@@ -2,14 +2,11 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="c18fd33a-4a10-4e91-9f89-39d45d015792" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/morgine.iml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/param/example_test.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/param/validator_test.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/param/parser.go" beforeDir="false" afterPath="$PROJECT_DIR$/param/parser.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/router/route_test.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/router/router.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cfg/schema.go" beforeDir="false" afterPath="$PROJECT_DIR$/cfg/schema.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/param/example_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/param/example_test.go" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -20,19 +17,10 @@
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="375">
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/cfg/doc.go">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="114">
-              <caret line="6" selection-start-line="6" selection-end-line="6" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/../../../gitee.com/orivil/morgine/router/router.go">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="152">
-              <caret line="8" column="7" selection-start-line="8" selection-start-column="7" selection-end-line="8" selection-end-column="7" />
+            <state relative-caret-position="-2423">
+              <caret line="125" column="10" selection-start-line="125" selection-start-column="5" selection-end-line="125" selection-end-column="10" />
               <folding>
                 <element signature="e#187#252#0" expanded="true" />
               </folding>
@@ -41,10 +29,62 @@
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/../../../gitee.com/orivil/morgine/router/example_test.go">
+        <entry file="file://$PROJECT_DIR$/router/router.go">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="228">
-              <caret line="15" selection-start-line="15" selection-end-line="15" />
+            <state relative-caret-position="798">
+              <caret line="42" column="18" selection-start-line="42" selection-start-column="18" selection-end-line="42" selection-end-column="18" />
+              <folding>
+                <element signature="e#179#210#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/router/route_test.go">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="332">
+              <caret line="76" column="13" selection-start-line="76" selection-start-column="13" selection-end-line="76" selection-end-column="13" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/../../gin-gonic/gin/auth_test.go">
+          <provider selected="true" editor-type-id="text-editor" />
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/../../gin-gonic/gin/auth.go">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="-1029" />
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/../../gin-gonic/gin/tree.go">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="-10986" />
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/param/validator_test.go">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="456">
+              <caret line="78" column="34" selection-start-line="78" selection-start-column="34" selection-end-line="78" selection-end-column="34" />
+              <folding>
+                <element signature="e#178#281#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/param/example_test.go">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="757">
+              <caret line="115" column="4" selection-start-line="115" selection-start-column="4" selection-end-line="115" selection-end-column="4" />
             </state>
           </provider>
         </entry>
@@ -57,58 +97,10 @@
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/cfg/loader.go">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="19">
-              <caret line="35" column="17" selection-start-line="35" selection-start-column="17" selection-end-line="35" selection-end-column="17" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/cfg/schema.go">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="343">
-              <caret line="49" column="26" selection-start-line="49" selection-start-column="26" selection-end-line="49" selection-end-column="26" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/param/validator.go">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="2020">
-              <caret line="464" column="40" selection-start-line="464" selection-start-column="40" selection-end-line="464" selection-end-column="40" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/param/filter.go">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="304">
-              <caret line="16" column="43" selection-start-line="16" selection-start-column="43" selection-end-line="16" selection-end-column="43" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/param/kind.go">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="437">
-              <caret line="23" column="49" selection-start-line="23" selection-start-column="49" selection-end-line="23" selection-end-column="49" />
-              <folding>
-                <element signature="e#178#207#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/param/file.go">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="133">
-              <caret line="7" selection-start-line="7" selection-end-line="7" />
+            <state relative-caret-position="1197">
+              <caret line="68" column="50" selection-start-line="68" selection-start-column="50" selection-end-line="68" selection-end-column="50" />
             </state>
           </provider>
         </entry>
@@ -127,9 +119,11 @@
       <find>reflect.Kind</find>
       <find>param.</find>
       <find>the file handler is nil</find>
+      <find>Entry</find>
     </findStrings>
     <replaceStrings>
       <replace>Kind</replace>
+      <replace>Node</replace>
     </replaceStrings>
     <dirStrings>
       <dir>D:\golang\OneDrive\src\github.com\orivil\morgine\param</dir>
@@ -143,7 +137,6 @@
     <option name="CHANGED_PATHS">
       <list>
         <option value="$PROJECT_DIR$/cfg/doc.go" />
-        <option value="$PROJECT_DIR$/cfg/schema.go" />
         <option value="$PROJECT_DIR$/cfg/loader.go" />
         <option value="$PROJECT_DIR$/param/interface.go" />
         <option value="$PROJECT_DIR$/param/file.go" />
@@ -152,6 +145,9 @@
         <option value="$PROJECT_DIR$/param/validator_test.go" />
         <option value="$PROJECT_DIR$/param/parser.go" />
         <option value="$PROJECT_DIR$/param/example_test.go" />
+        <option value="$PROJECT_DIR$/cfg/schema.go" />
+        <option value="$PROJECT_DIR$/router/router.go" />
+        <option value="$PROJECT_DIR$/router/route_test.go" />
       </list>
     </option>
   </component>
@@ -167,7 +163,6 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
-      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
@@ -187,67 +182,60 @@
             </path>
             <path>
               <item name="morgine" type="b2602c69:ProjectViewProjectNode" />
-              <item name="External Libraries" type="cb654da1:ExternalLibrariesNode" />
-            </path>
-            <path>
-              <item name="morgine" type="b2602c69:ProjectViewProjectNode" />
-              <item name="External Libraries" type="cb654da1:ExternalLibrariesNode" />
-              <item name="GOPATH &lt;morgine&gt;" type="20ee2d1f:SyntheticLibraryElementNode" />
-            </path>
-            <path>
-              <item name="morgine" type="b2602c69:ProjectViewProjectNode" />
-              <item name="External Libraries" type="cb654da1:ExternalLibrariesNode" />
-              <item name="GOPATH &lt;morgine&gt;" type="20ee2d1f:SyntheticLibraryElementNode" />
-              <item name="src" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="morgine" type="b2602c69:ProjectViewProjectNode" />
-              <item name="External Libraries" type="cb654da1:ExternalLibrariesNode" />
-              <item name="GOPATH &lt;morgine&gt;" type="20ee2d1f:SyntheticLibraryElementNode" />
-              <item name="src" type="462c0819:PsiDirectoryNode" />
-              <item name="gitee.com" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="morgine" type="b2602c69:ProjectViewProjectNode" />
-              <item name="External Libraries" type="cb654da1:ExternalLibrariesNode" />
-              <item name="GOPATH &lt;morgine&gt;" type="20ee2d1f:SyntheticLibraryElementNode" />
-              <item name="src" type="462c0819:PsiDirectoryNode" />
-              <item name="gitee.com" type="462c0819:PsiDirectoryNode" />
-              <item name="orivil" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="morgine" type="b2602c69:ProjectViewProjectNode" />
-              <item name="External Libraries" type="cb654da1:ExternalLibrariesNode" />
-              <item name="GOPATH &lt;morgine&gt;" type="20ee2d1f:SyntheticLibraryElementNode" />
-              <item name="src" type="462c0819:PsiDirectoryNode" />
-              <item name="gitee.com" type="462c0819:PsiDirectoryNode" />
-              <item name="orivil" type="462c0819:PsiDirectoryNode" />
-              <item name="morgine" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="morgine" type="b2602c69:ProjectViewProjectNode" />
-              <item name="External Libraries" type="cb654da1:ExternalLibrariesNode" />
-              <item name="GOPATH &lt;morgine&gt;" type="20ee2d1f:SyntheticLibraryElementNode" />
-              <item name="src" type="462c0819:PsiDirectoryNode" />
-              <item name="gitee.com" type="462c0819:PsiDirectoryNode" />
-              <item name="orivil" type="462c0819:PsiDirectoryNode" />
-              <item name="morgine" type="462c0819:PsiDirectoryNode" />
-              <item name="param" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="morgine" type="b2602c69:ProjectViewProjectNode" />
-              <item name="External Libraries" type="cb654da1:ExternalLibrariesNode" />
-              <item name="GOPATH &lt;morgine&gt;" type="20ee2d1f:SyntheticLibraryElementNode" />
-              <item name="src" type="462c0819:PsiDirectoryNode" />
-              <item name="gitee.com" type="462c0819:PsiDirectoryNode" />
-              <item name="orivil" type="462c0819:PsiDirectoryNode" />
               <item name="morgine" type="462c0819:PsiDirectoryNode" />
               <item name="router" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="morgine" type="b2602c69:ProjectViewProjectNode" />
+              <item name="External Libraries" type="cb654da1:ExternalLibrariesNode" />
+            </path>
+            <path>
+              <item name="morgine" type="b2602c69:ProjectViewProjectNode" />
+              <item name="External Libraries" type="cb654da1:ExternalLibrariesNode" />
+              <item name="GOPATH &lt;morgine&gt;" type="20ee2d1f:SyntheticLibraryElementNode" />
+            </path>
+            <path>
+              <item name="morgine" type="b2602c69:ProjectViewProjectNode" />
+              <item name="External Libraries" type="cb654da1:ExternalLibrariesNode" />
+              <item name="GOPATH &lt;morgine&gt;" type="20ee2d1f:SyntheticLibraryElementNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="morgine" type="b2602c69:ProjectViewProjectNode" />
+              <item name="External Libraries" type="cb654da1:ExternalLibrariesNode" />
+              <item name="GOPATH &lt;morgine&gt;" type="20ee2d1f:SyntheticLibraryElementNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
+              <item name="gitee.com" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="morgine" type="b2602c69:ProjectViewProjectNode" />
+              <item name="External Libraries" type="cb654da1:ExternalLibrariesNode" />
+              <item name="GOPATH &lt;morgine&gt;" type="20ee2d1f:SyntheticLibraryElementNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
+              <item name="github.com" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="morgine" type="b2602c69:ProjectViewProjectNode" />
+              <item name="External Libraries" type="cb654da1:ExternalLibrariesNode" />
+              <item name="GOPATH &lt;morgine&gt;" type="20ee2d1f:SyntheticLibraryElementNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
+              <item name="github.com" type="462c0819:PsiDirectoryNode" />
+              <item name="gin-gonic" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="morgine" type="b2602c69:ProjectViewProjectNode" />
+              <item name="External Libraries" type="cb654da1:ExternalLibrariesNode" />
+              <item name="GOPATH &lt;morgine&gt;" type="20ee2d1f:SyntheticLibraryElementNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
+              <item name="github.com" type="462c0819:PsiDirectoryNode" />
+              <item name="gin-gonic" type="462c0819:PsiDirectoryNode" />
+              <item name="gin" type="462c0819:PsiDirectoryNode" />
             </path>
           </expand>
           <select />
         </subPane>
       </pane>
+      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -258,7 +246,7 @@
     <property name="go.gopath.indexing.explicitly.defined" value="true" />
     <property name="go.import.settings.migrated" value="true" />
     <property name="go.sdk.automatically.set" value="true" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/param" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/../../../gitee.com/orivil/morgine" />
     <property name="nodejs_interpreter_path.stuck_in_default_project" value="undefined stuck path" />
     <property name="nodejs_npm_path_reset_for_default_project" value="true" />
   </component>
@@ -280,7 +268,7 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Go Test.ExampleSchema in github.com/orivil/morgine/param">
+  <component name="RunManager" selected="Go Test.TestInitRoute in github.com/orivil/morgine/router">
     <configuration name="ExampleSchema in github.com/orivil/morgine/param" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
       <module name="morgine" />
       <working_directory value="$PROJECT_DIR$/param" />
@@ -290,6 +278,17 @@
       <directory value="$PROJECT_DIR$/" />
       <filePath value="$PROJECT_DIR$/" />
       <pattern value="^ExampleSchema$" />
+      <method v="2" />
+    </configuration>
+    <configuration name="TestInitRoute in github.com/orivil/morgine/router" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+      <module name="morgine" />
+      <working_directory value="$PROJECT_DIR$/router" />
+      <framework value="gotest" />
+      <kind value="PACKAGE" />
+      <package value="github.com/orivil/morgine/router" />
+      <directory value="$PROJECT_DIR$/" />
+      <filePath value="$PROJECT_DIR$/" />
+      <pattern value="^TestInitRoute$" />
       <method v="2" />
     </configuration>
     <configuration name="go test github.com/orivil/morgine/param" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
@@ -304,52 +303,53 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Go Test.TestInitRoute in github.com/orivil/morgine/router" />
         <item itemvalue="Go Test.ExampleSchema in github.com/orivil/morgine/param" />
         <item itemvalue="Go Test.go test github.com/orivil/morgine/param" />
       </list>
     </recent_temporary>
   </component>
   <component name="TestHistory">
-    <history-entry file="ExampleSchema_in_github_com_orivil_morgine_param - 2019.07.18 at 14h 26m 13s.xml">
-      <configuration name="ExampleSchema in github.com/orivil/morgine/param" configurationId="GoTestRunConfiguration" />
+    <history-entry file="TestInitRoute_in_github_com_orivil_morgine_router - 2019.07.22 at 16h 40m 03s.xml">
+      <configuration name="TestInitRoute in github.com/orivil/morgine/router" configurationId="GoTestRunConfiguration" />
     </history-entry>
-    <history-entry file="ExampleSchema_in_github_com_orivil_morgine_param - 2019.07.18 at 14h 34m 00s.xml">
-      <configuration name="ExampleSchema in github.com/orivil/morgine/param" configurationId="GoTestRunConfiguration" />
+    <history-entry file="TestInitRoute_in_github_com_orivil_morgine_router - 2019.07.22 at 16h 40m 32s.xml">
+      <configuration name="TestInitRoute in github.com/orivil/morgine/router" configurationId="GoTestRunConfiguration" />
     </history-entry>
-    <history-entry file="ExampleSchema_in_github_com_orivil_morgine_param - 2019.07.18 at 14h 35m 14s.xml">
-      <configuration name="ExampleSchema in github.com/orivil/morgine/param" configurationId="GoTestRunConfiguration" />
+    <history-entry file="TestInitRoute_in_github_com_orivil_morgine_router - 2019.07.22 at 16h 42m 26s.xml">
+      <configuration name="TestInitRoute in github.com/orivil/morgine/router" configurationId="GoTestRunConfiguration" />
     </history-entry>
-    <history-entry file="ExampleSchema_in_github_com_orivil_morgine_param - 2019.07.18 at 14h 35m 45s.xml">
-      <configuration name="ExampleSchema in github.com/orivil/morgine/param" configurationId="GoTestRunConfiguration" />
+    <history-entry file="TestInitRoute_in_github_com_orivil_morgine_router - 2019.07.22 at 16h 43m 53s.xml">
+      <configuration name="TestInitRoute in github.com/orivil/morgine/router" configurationId="GoTestRunConfiguration" />
     </history-entry>
-    <history-entry file="ExampleSchema_in_github_com_orivil_morgine_param - 2019.07.18 at 14h 37m 02s.xml">
-      <configuration name="ExampleSchema in github.com/orivil/morgine/param" configurationId="GoTestRunConfiguration" />
+    <history-entry file="TestInitRoute_in_github_com_orivil_morgine_router - 2019.07.22 at 16h 44m 15s.xml">
+      <configuration name="TestInitRoute in github.com/orivil/morgine/router" configurationId="GoTestRunConfiguration" />
     </history-entry>
-    <history-entry file="ExampleSchema_in_github_com_orivil_morgine_param - 2019.07.18 at 14h 37m 26s.xml">
-      <configuration name="ExampleSchema in github.com/orivil/morgine/param" configurationId="GoTestRunConfiguration" />
+    <history-entry file="TestInitRoute_in_github_com_orivil_morgine_router - 2019.07.22 at 16h 44m 48s.xml">
+      <configuration name="TestInitRoute in github.com/orivil/morgine/router" configurationId="GoTestRunConfiguration" />
     </history-entry>
-    <history-entry file="ExampleSchema_in_github_com_orivil_morgine_param - 2019.07.18 at 14h 37m 37s.xml">
-      <configuration name="ExampleSchema in github.com/orivil/morgine/param" configurationId="GoTestRunConfiguration" />
+    <history-entry file="TestInitRoute_in_github_com_orivil_morgine_router - 2019.07.22 at 16h 48m 46s.xml">
+      <configuration name="TestInitRoute in github.com/orivil/morgine/router" configurationId="GoTestRunConfiguration" />
     </history-entry>
-    <history-entry file="ExampleSchema_in_github_com_orivil_morgine_param - 2019.07.18 at 14h 40m 04s.xml">
-      <configuration name="ExampleSchema in github.com/orivil/morgine/param" configurationId="GoTestRunConfiguration" />
+    <history-entry file="TestInitRoute_in_github_com_orivil_morgine_router - 2019.07.22 at 16h 49m 56s.xml">
+      <configuration name="TestInitRoute in github.com/orivil/morgine/router" configurationId="GoTestRunConfiguration" />
     </history-entry>
-    <history-entry file="ExampleSchema_in_github_com_orivil_morgine_param - 2019.07.18 at 15h 18m 02s.xml">
-      <configuration name="ExampleSchema in github.com/orivil/morgine/param" configurationId="GoTestRunConfiguration" />
+    <history-entry file="TestInitRoute_in_github_com_orivil_morgine_router - 2019.07.22 at 16h 50m 55s.xml">
+      <configuration name="TestInitRoute in github.com/orivil/morgine/router" configurationId="GoTestRunConfiguration" />
     </history-entry>
-    <history-entry file="ExampleSchema_in_github_com_orivil_morgine_param - 2019.07.18 at 15h 18m 18s.xml">
-      <configuration name="ExampleSchema in github.com/orivil/morgine/param" configurationId="GoTestRunConfiguration" />
+    <history-entry file="TestInitRoute_in_github_com_orivil_morgine_router - 2019.07.22 at 16h 54m 52s.xml">
+      <configuration name="TestInitRoute in github.com/orivil/morgine/router" configurationId="GoTestRunConfiguration" />
     </history-entry>
   </component>
   <component name="ToolWindowManager">
     <frame x="-8" y="-8" width="1936" height="1056" extended-state="6" />
     <layout>
-      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.3245708" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.32939914" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Find" order="1" />
-      <window_info anchor="bottom" id="Run" order="2" weight="0.4905028" />
+      <window_info anchor="bottom" id="Run" order="2" visible="true" weight="0.26145253" />
       <window_info anchor="bottom" id="Debug" order="3" weight="0.4" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
@@ -389,6 +389,20 @@
                 </list>
               </option>
             </State>
+          </value>
+        </entry>
+      </map>
+    </option>
+    <option name="RECENT_FILTERS">
+      <map>
+        <entry key="Branch">
+          <value>
+            <list />
+          </value>
+        </entry>
+        <entry key="User">
+          <value>
+            <list />
           </value>
         </entry>
       </map>
@@ -439,13 +453,7 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/param/interface.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="133">
-          <caret line="7" selection-start-line="7" selection-end-line="7" />
-        </state>
-      </provider>
-    </entry>
+    <entry file="file://$PROJECT_DIR$/param/interface.go" />
     <entry file="file://C:/Go/src/reflect/type.go">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="401">
@@ -475,16 +483,6 @@
         <state relative-caret-position="-228" />
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/param/validator_test.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="907">
-          <caret line="78" column="34" selection-start-line="78" selection-start-column="34" selection-end-line="78" selection-end-column="34" />
-          <folding>
-            <element signature="e#178#281#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://C:/Go/src/runtime/panic.go">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="131">
@@ -506,65 +504,10 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/param/example_test.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="260">
-          <caret line="59" column="1" lean-forward="true" selection-start-line="59" selection-start-column="1" selection-end-line="59" selection-end-column="1" />
-          <folding>
-            <element signature="e#183#316#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/param/parser.go">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="627">
           <caret line="565" column="13" lean-forward="true" selection-start-line="565" selection-start-column="13" selection-end-line="565" selection-end-column="13" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/param/validator.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="2020">
-          <caret line="464" column="40" selection-start-line="464" selection-start-column="40" selection-end-line="464" selection-end-column="40" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/param/kind.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="437">
-          <caret line="23" column="49" selection-start-line="23" selection-start-column="49" selection-end-line="23" selection-end-column="49" />
-          <folding>
-            <element signature="e#178#207#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/param/filter.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="304">
-          <caret line="16" column="43" selection-start-line="16" selection-start-column="43" selection-end-line="16" selection-end-column="43" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/param/file.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="133">
-          <caret line="7" selection-start-line="7" selection-end-line="7" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/cfg/schema.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="343">
-          <caret line="49" column="26" selection-start-line="49" selection-start-column="26" selection-end-line="49" selection-end-column="26" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/cfg/loader.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="19">
-          <caret line="35" column="17" selection-start-line="35" selection-start-column="17" selection-end-line="35" selection-end-column="17" />
         </state>
       </provider>
     </entry>
@@ -575,11 +518,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/../../../gitee.com/orivil/morgine/router/router_test.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-10910" />
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/../../../gitee.com/orivil/morgine/router/example_test.go">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="228">
@@ -587,13 +525,110 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/cfg/loader.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="532">
+          <caret line="35" column="17" selection-start-line="35" selection-start-column="17" selection-end-line="35" selection-end-column="17" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/param/validator.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="8626">
+          <caret line="464" column="40" selection-start-line="464" selection-start-column="40" selection-end-line="464" selection-end-column="40" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/param/filter.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="304">
+          <caret line="16" column="43" selection-start-line="16" selection-start-column="43" selection-end-line="16" selection-end-column="43" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/param/kind.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="380">
+          <caret line="23" column="49" selection-start-line="23" selection-start-column="49" selection-end-line="23" selection-end-column="49" />
+          <folding>
+            <element signature="e#178#207#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/param/file.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="133">
+          <caret line="7" selection-start-line="7" selection-end-line="7" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/param/validator_test.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="456">
+          <caret line="78" column="34" selection-start-line="78" selection-start-column="34" selection-end-line="78" selection-end-column="34" />
+          <folding>
+            <element signature="e#178#281#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/param/example_test.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="757">
+          <caret line="115" column="4" selection-start-line="115" selection-start-column="4" selection-end-line="115" selection-end-column="4" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/cfg/schema.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1197">
+          <caret line="68" column="50" selection-start-line="68" selection-start-column="50" selection-end-line="68" selection-end-column="50" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../../gin-gonic/gin/auth_test.go">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../../gin-gonic/gin/auth.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-1029" />
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../../gin-gonic/gin/tree.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-10986" />
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../../../gitee.com/orivil/morgine/router/router_test.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-10910" />
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/../../../gitee.com/orivil/morgine/router/router.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="152">
-          <caret line="8" column="7" selection-start-line="8" selection-start-column="7" selection-end-line="8" selection-end-column="7" />
+        <state relative-caret-position="-2423">
+          <caret line="125" column="10" selection-start-line="125" selection-start-column="5" selection-end-line="125" selection-end-column="10" />
           <folding>
             <element signature="e#187#252#0" expanded="true" />
           </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/router/router.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="798">
+          <caret line="42" column="18" selection-start-line="42" selection-start-column="18" selection-end-line="42" selection-end-column="18" />
+          <folding>
+            <element signature="e#179#210#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/router/route_test.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="332">
+          <caret line="76" column="13" selection-start-line="76" selection-start-column="13" selection-end-line="76" selection-end-column="13" />
         </state>
       </provider>
     </entry>

@@ -108,11 +108,11 @@ func ExampleSchema() {
 	// 验证并解析参数
 	err = parser.Parse(uintptr(unsafe.Pointer(p)), formData)
 	if err != nil {
-		//fmt.Println(err)
+		fmt.Println(err)
 
-		if ce, ok := err.(*param.ValidatorErr); ok { // 可获得具体的条件数据
-			fmt.Printf("%s: %s\n", ce.Field, ce.Message)
-		}
+		//if ce, ok := err.(*param.ValidatorErr); ok { // 可获得具体的条件数据
+		//	fmt.Printf("%s: %s\n", ce.Field, ce.Message)
+		//}
 	}
 	// Output:
 	// Files: 1-3 items
