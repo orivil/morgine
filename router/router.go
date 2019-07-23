@@ -5,11 +5,14 @@
 package router
 
 import (
+	"net/url"
 	"regexp"
 	"sort"
 	"strings"
 	"sync"
 )
+
+type Values func() url.Values
 
 type Router struct {
 	entries map[string]Nodes
@@ -22,14 +25,25 @@ func NewRouter() *Router {
 }
 
 func (r *Router) Add(method, route string, action interface{}) error {
-	return r.entries[method].add(method, route, action)
+	if _, ok := r.entries[method]; !ok {
+		r.entries[method] = make(Nodes, 0)
+	}
+	nodes := r.entries[method]
+	err := nodes.add(method, route, action)
+	if err != nil {
+		return err
+	} else {
+		r.entries[method] = nodes
+		return nil
+	}
 }
 
-func (r *Router) Match(method, path string) (action interface{}) {
+func (r *Router) Match(method, path string) (vs Values, action interface{}) {
 	if es, ok := r.entries[method]; ok {
-		return es.match(path)
+		matcher, act := es.match(path)
+		return func() url.Values { return getValues(matcher, path) }, act
 	}
-	return nil
+	return nil, nil
 }
 
 func (r *Router) Nodes() Nodes {
@@ -50,7 +64,12 @@ func (es Nodes) Len() int {
 }
 
 func (es Nodes) Less(i, j int) bool {
-	return strings.Count(es[i].prefix, "/") < strings.Count(es[j].prefix, "/")
+	ci := strings.Count(es[i].prefix, "/")
+	cj := strings.Count(es[j].prefix, "/")
+	if ci == cj {
+		return len(es[i].prefix) > len(es[j].prefix)
+	}
+	return ci > cj
 }
 
 func (es Nodes) Swap(i, j int) {
@@ -74,13 +93,13 @@ func (es *Nodes) add(method, route string, action interface{}) error {
 	return nil
 }
 
-func (es Nodes) match(path string) (action interface{}) {
+func (es Nodes) match(path string) (matcher *regexp.Regexp, action interface{}) {
 	for _, ety := range es {
 		if action = ety.match(path); action != nil {
-			return action
+			return ety.matcher, action
 		}
 	}
-	return nil
+	return nil, nil
 }
 
 type Node struct {
@@ -121,11 +140,22 @@ func initRoute(route string) (prefix, pattern string) {
 			return "(?P<" + s + ">[^\\/^\\.]+)"
 		})
 		pattern = "^" + pattern
-		if strings.HasSuffix(pattern, "/") {
-			pattern = strings.TrimSuffix(pattern, "/")
-		} else {
+		if !strings.HasSuffix(pattern, "/") {
 			pattern += "$"
 		}
 	}
 	return
+}
+
+// 获得 path 中的参数
+func getValues(matcher *regexp.Regexp, path string) url.Values {
+	vs := make(url.Values, 2)
+	names := matcher.SubexpNames()
+	values := matcher.FindStringSubmatch(path)
+	for key, name := range names {
+		if name != "" && values[key] != "" {
+			vs[name] = append(vs[name], values[key])
+		}
+	}
+	return vs
 }

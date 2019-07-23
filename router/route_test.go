@@ -4,7 +4,9 @@
 
 package router
 
-import "testing"
+import (
+	"testing"
+)
 
 type dt struct {
 	route   string
@@ -29,7 +31,7 @@ var dts = []*dt{
 		route: "/foo/bar/",
 
 		prefix:  "/foo/bar",
-		pattern: "^/foo/bar",
+		pattern: "^/foo/bar/",
 	},
 	{
 		route: "/{foo}/{bar}",
@@ -65,8 +67,8 @@ type rt struct {
 }
 
 type mt struct {
-	path    string
-	success func(action interface{}) bool
+	path  string
+	check func(values Values, action interface{}) bool
 }
 
 var rts = []*rt{
@@ -76,10 +78,60 @@ var rts = []*rt{
 		matches: []*mt{
 			{
 				path: "/",
-				success: func(action interface{}) bool {
-					if action.(int) == 1 {
-						return true
-					}
+				check: func(values Values, action interface{}) bool {
+					i, ok := action.(int)
+					return ok && i == 1
+				},
+			},
+			{
+				path: "/foobar",
+				check: func(values Values, action interface{}) bool {
+					return action == nil
+				},
+			},
+		},
+	},
+	{
+		route:  "/foo/bar", // 精确匹配
+		action: 2,
+	},
+	{
+		route:  "/foo/", // 泛匹配
+		action: 3,
+		matches: []*mt{
+			// 优先匹配长路由
+			{
+				path: "/foo/bar",
+				check: func(values Values, action interface{}) bool {
+					i, ok := action.(int)
+					return ok && i == 2
+				},
+			},
+			// 后匹配泛路由
+			{
+				path: "/foo/barbar",
+				check: func(values Values, action interface{}) bool {
+					i, ok := action.(int)
+					return ok && i == 3
+				},
+			},
+			{
+				path: "/foo/bar/",
+				check: func(values Values, action interface{}) bool {
+					return action == 3
+				},
+			},
+		},
+	},
+	{
+		route:  "/{mp}.txt",
+		action: 4,
+		matches: []*mt{
+			{
+				path: "/123456.txt",
+				check: func(values Values, action interface{}) bool {
+					i, ok := action.(int)
+					return ok && i == 4 && values().Get("mp") == "123456"
 				},
 			},
 		},
@@ -87,5 +139,20 @@ var rts = []*rt{
 }
 
 func TestRouter_Match(t *testing.T) {
-
+	method := "GET"
+	router := NewRouter()
+	for _, rt := range rts {
+		err := router.Add(method, rt.route, rt.action)
+		if err != nil {
+			t.Error(err)
+		}
+	}
+	for _, rt := range rts {
+		for _, mt := range rt.matches {
+			vs, act := router.Match(method, mt.path)
+			if !mt.check(vs, act) {
+				t.Errorf("path [%s] need action [%v] got action [%v] values [%v]", mt.path, rt.action, act, vs())
+			}
+		}
+	}
 }
