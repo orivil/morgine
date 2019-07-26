@@ -2,9 +2,10 @@
 // Use of this source code is governed by a MIT-style
 // license that can be found at https://mit-license.org.
 
-package router
+package router_test
 
 import (
+	"github.com/orivil/morgine/router"
 	"testing"
 )
 
@@ -49,7 +50,7 @@ var dts = []*dt{
 
 func TestInitRoute(t *testing.T) {
 	for _, dt := range dts {
-		prefix, pattern := initRoute(dt.route)
+		prefix, pattern := router.InitRoute(dt.route)
 		if dt.prefix != prefix {
 			t.Errorf("prefix need: %s got: %s\n", dt.prefix, prefix)
 		}
@@ -68,7 +69,7 @@ type rt struct {
 
 type mt struct {
 	path  string
-	check func(values Values, action interface{}) bool
+	check func(values router.Values, action interface{}) bool
 }
 
 var rts = []*rt{
@@ -78,14 +79,14 @@ var rts = []*rt{
 		matches: []*mt{
 			{
 				path: "/",
-				check: func(values Values, action interface{}) bool {
+				check: func(values router.Values, action interface{}) bool {
 					i, ok := action.(int)
 					return ok && i == 1
 				},
 			},
 			{
 				path: "/foobar",
-				check: func(values Values, action interface{}) bool {
+				check: func(values router.Values, action interface{}) bool {
 					return action == nil
 				},
 			},
@@ -102,7 +103,7 @@ var rts = []*rt{
 			// 优先匹配长路由
 			{
 				path: "/foo/bar",
-				check: func(values Values, action interface{}) bool {
+				check: func(values router.Values, action interface{}) bool {
 					i, ok := action.(int)
 					return ok && i == 2
 				},
@@ -110,14 +111,14 @@ var rts = []*rt{
 			// 后匹配泛路由
 			{
 				path: "/foo/barbar",
-				check: func(values Values, action interface{}) bool {
+				check: func(values router.Values, action interface{}) bool {
 					i, ok := action.(int)
 					return ok && i == 3
 				},
 			},
 			{
 				path: "/foo/bar/",
-				check: func(values Values, action interface{}) bool {
+				check: func(values router.Values, action interface{}) bool {
 					return action == 3
 				},
 			},
@@ -129,7 +130,7 @@ var rts = []*rt{
 		matches: []*mt{
 			{
 				path: "/123456.txt",
-				check: func(values Values, action interface{}) bool {
+				check: func(values router.Values, action interface{}) bool {
 					i, ok := action.(int)
 					return ok && i == 4 && values().Get("mp") == "123456"
 				},
@@ -140,16 +141,16 @@ var rts = []*rt{
 
 func TestRouter_Match(t *testing.T) {
 	method := "GET"
-	router := NewRouter()
+	r := router.NewRouter()
 	for _, rt := range rts {
-		err := router.Add(method, rt.route, rt.action)
+		err := r.Add(method, rt.route, rt.action)
 		if err != nil {
 			t.Error(err)
 		}
 	}
 	for _, rt := range rts {
 		for _, mt := range rt.matches {
-			vs, act := router.Match(method, mt.path)
+			vs, act := r.Match(method, mt.path)
 			if !mt.check(vs, act) {
 				t.Errorf("path [%s] need action [%v] got action [%v] values [%v]", mt.path, rt.action, act, vs())
 			}

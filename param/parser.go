@@ -31,8 +31,16 @@ func (fe *FieldError) Error() string {
 	return fmt.Sprintf("field [%s]: %s", fe.Field, fe.Err)
 }
 
+type EncodeType string
+
+const (
+	UrlEncodeType      = "application/x-www-form-urlencoded"
+	FormDataEncodeType = "multipart/form-data"
+)
+
 type Parser interface {
-	Unmarshal(data *multipart.Form, schema interface{}) error
+	EncodeType() EncodeType
+	Parse(pointer uintptr, form *multipart.Form) error
 }
 
 type Schema struct {
@@ -41,14 +49,13 @@ type Schema struct {
 	Fields []*Field
 }
 
-// 检测是否有文件(FileHandler)字段, 通常有文件数据与无文件数据的数据组织方式是不一样的
-func (s *Schema) HasFileField() bool {
+func (s *Schema) EncodeType() EncodeType {
 	for _, field := range s.Fields {
 		if field.Kind == File {
-			return true
+			return FormDataEncodeType
 		}
 	}
-	return false
+	return UrlEncodeType
 }
 
 // 验证并解析数据, 该方法直接映射内存, 是不安全的, 使用时一定要保证模型一致.

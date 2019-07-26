@@ -5,9 +5,9 @@
 package router
 
 import (
+	"container/heap"
 	"net/url"
 	"regexp"
-	"sort"
 	"strings"
 	"sync"
 )
@@ -59,6 +59,15 @@ func (r *Router) Nodes() Nodes {
 
 type Nodes []*Node
 
+func (es *Nodes) Push(v interface{}) {
+	*es = append(*es, v.(*Node))
+}
+
+func (es *Nodes) Pop() (v interface{}) {
+	*es, v = (*es)[:es.Len()-1], (*es)[es.Len()-1]
+	return
+}
+
 func (es Nodes) Len() int {
 	return len(es)
 }
@@ -77,19 +86,18 @@ func (es Nodes) Swap(i, j int) {
 }
 
 func (es *Nodes) add(method, route string, action interface{}) error {
-	prefix, pattern := initRoute(route)
+	prefix, pattern := InitRoute(route)
 	matcher, err := regexp.Compile(pattern)
 	if err != nil {
 		return err
 	}
-	*es = append(*es, &Node{
+	heap.Push(es, &Node{
 		prefix:  prefix,
 		Route:   route,
 		matcher: matcher,
 		Action:  action,
 		Method:  method,
 	})
-	sort.Sort(es)
 	return nil
 }
 
@@ -124,7 +132,8 @@ var paramPatternReplacer = regexp.MustCompile("{[^\\/]+?}")
 
 var pathPatternMatcher = regexp.MustCompile("^/[\\w|\\-|\\_|\\/|\\.]*")
 
-func initRoute(route string) (prefix, pattern string) {
+// 将路由格式转换成正则匹配格式
+func InitRoute(route string) (prefix, pattern string) {
 	switch route {
 	case "", "/":
 		prefix = "/"
