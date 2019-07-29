@@ -6,6 +6,7 @@ package router
 
 import (
 	"container/heap"
+	"github.com/pkg/errors"
 	"net/url"
 	"regexp"
 	"strings"
@@ -17,14 +18,21 @@ type Values func() url.Values
 type Router struct {
 	entries map[string]Nodes
 	nodes   Nodes
+	unique  map[string]struct{}
 	mu      sync.Mutex
 }
 
 func NewRouter() *Router {
-	return &Router{entries: make(map[string]Nodes, 8)}
+	return &Router{entries: make(map[string]Nodes, 8), unique: make(map[string]struct{}, 10)}
 }
 
 func (r *Router) Add(method, route string, action interface{}) error {
+	key := method + getUniquePattern(route)
+	if _, exist := r.unique[key]; exist {
+		return errors.Errorf("got shadow route [%s]", route)
+	} else {
+		r.unique[key] = struct{}{}
+	}
 	if _, ok := r.entries[method]; !ok {
 		r.entries[method] = make(Nodes, 0)
 	}
@@ -131,6 +139,14 @@ func (ety *Node) match(path string) (action interface{}) {
 var paramPatternReplacer = regexp.MustCompile("{[^\\/]+?}")
 
 var pathPatternMatcher = regexp.MustCompile("^/[\\w|\\-|\\_|\\/|\\.]*")
+
+var wildcard = "{____}"
+
+func getUniquePattern(pattern string) string {
+	return paramPatternReplacer.ReplaceAllStringFunc(pattern, func(s string) string {
+		return wildcard
+	})
+}
 
 // 将路由格式转换成正则匹配格式
 func InitRoute(route string) (prefix, pattern string) {

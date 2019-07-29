@@ -6,6 +6,7 @@ package xx
 
 import (
 	"github.com/orivil/morgine/param"
+	"github.com/orivil/morgine/router"
 	"net/http"
 )
 
@@ -35,6 +36,7 @@ type Response struct {
 }
 
 type Doc struct {
+	Tag       TagName
 	Method    string
 	Route     string
 	Params    Params
@@ -42,23 +44,41 @@ type Doc struct {
 	parser    *param.Schema
 }
 
+type Middleware struct {
+	Doc        *Doc
+	HandleFunc HandleFunc
+}
+
 type Handler struct {
-	Doc    Doc
-	Handle func(ctx *Context)
+	Doc        *Doc
+	Middles    []*Middleware
+	HandleFunc HandleFunc
 }
 
-type Tag *string
-
-func TagName(name string) Tag {
-	return &name
-}
-
-type Tags []Tag
+type HandleFunc func(ctx *Context)
 
 type Controller struct {
-	Tag      Tag
+	Tag      TagName
 	Handlers []*Handler
 }
 
 type Condition struct {
+	middles []*Middleware
+	router  *router.Router
+}
+
+func (cdt *Condition) Use(middles ...*Middleware) {
+	cdt.middles = append(cdt.middles, middles...)
+}
+
+func (cdt *Condition) Handle(method, route string, handleFunc HandleFunc, doc *Doc) {
+	handler := &Handler{
+		Doc:        doc,
+		Middles:    cdt.middles,
+		HandleFunc: handleFunc,
+	}
+	err := cdt.router.Add(method, route, handler)
+	if err != nil {
+		panic(err)
+	}
 }
