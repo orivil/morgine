@@ -39,7 +39,7 @@ type Doc struct {
 	Route     string
 	Params    Params
 	Responses Responses
-	parser    param.Parser
+	parser    *param.Schema
 }
 
 type Handler struct {
@@ -56,6 +56,9 @@ func TagName(name string) Tag {
 type Tags []Tag
 
 type Controller struct {
-	Tag     Tag
-	Actions []*Handler
+	Tag      Tag
+	Handlers []*Handler
+}
+
+type Condition struct {
 }
