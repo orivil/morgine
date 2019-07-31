@@ -5,7 +5,6 @@
 package main
 
 import (
-	"fmt"
 	"github.com/orivil/morgine/proxy"
 	"log"
 	"math/rand"
@@ -23,17 +22,17 @@ func main() {
 	//	server.Header.Set("X-Forwarded-For", ip)
 	//}
 	pxy.RequestHandler = nil
-	var handler http.HandlerFunc = func(writer http.ResponseWriter, request *http.Request) {
-		fmt.Println(request.URL)
-		//p := request.Header.Get("passwd")
-		//if p != passwd {
-		//	_, err := writer.Write([]byte("wrong password"))
-		//	if err != nil {
-		//		panic(err)
-		//	}
-		//} else {
-		pxy.ServeHTTP(writer, request)
-		//}
-	}
-	log.Fatal(http.ListenAndServe(":8081", handler))
+	//var handler http.HandlerFunc = func(writer http.ResponseWriter, request *http.Request) {
+	//	fmt.Println(request.URL)
+	//	//p := request.Header.Get("passwd")
+	//	//if p != passwd {
+	//	//	_, err := writer.Write([]byte("wrong password"))
+	//	//	if err != nil {
+	//	//		panic(err)
+	//	//	}
+	//	//} else {
+	//	pxy.ServeHTTP(writer, request)
+	//	//}
+	//}
+	log.Fatal(http.ListenAndServe(":8081", pxy))
 }
