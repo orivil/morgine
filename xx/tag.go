@@ -37,3 +37,18 @@ func (at *ApiTag) MarshalJSON() ([]byte, error) {
 	}
 	return json.Marshal(res)
 }
+
+func (tags ApiTags) checkIsSubTag(tag TagName) bool {
+	for _, at := range tags {
+		if at.Name == tag {
+			return true
+		}
+		if at.Subs != nil {
+			exist := at.Subs.checkIsSubTag(tag)
+			if exist {
+				return true
+			}
+		}
+	}
+	return false
+}

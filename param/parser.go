@@ -112,12 +112,10 @@ func NewSchema(v interface{}, validator *Validator, filter *Filter) (*Schema, er
 		Pkg:  t.PkgPath(),
 		Name: t.Name(),
 	}
-	for t.Kind() == reflect.Ptr {
-		t = t.Elem()
+	if t.Kind() != reflect.Ptr || t.Elem().Kind() != reflect.Struct {
+		return nil, fmt.Errorf("need struct pointer, got %v", t)
 	}
-	if t.Kind() != reflect.Struct {
-		return nil, fmt.Errorf("need struct, got %v", t)
-	}
+	t = t.Elem()
 	ptr := reflect.ValueOf(v).Pointer()
 	fields := structFields(t, 0)
 	for _, field := range fields {
@@ -136,7 +134,7 @@ func NewSchema(v interface{}, validator *Validator, filter *Filter) (*Schema, er
 
 			kind := fieldKind(field)
 			if kind == Invalid {
-				return nil, fmt.Errorf("field [%s] kind is invalid", field.Name)
+				return nil, fmt.Errorf("field '%s': the kind is invalid", field.Name)
 			}
 			f := &Field{
 				Name:  fieldName(field),

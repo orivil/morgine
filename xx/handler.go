@@ -5,17 +5,19 @@
 package xx
 
 import (
+	"fmt"
 	"github.com/orivil/morgine/param"
-	"github.com/orivil/morgine/router"
+	"mime/multipart"
 	"net/http"
+	"reflect"
 )
 
 type ParamType string
 
 const (
 	Query  ParamType = "query"
+	Path   ParamType = "path"
 	Form   ParamType = "form"
-	Body   ParamType = "body"
 	Header ParamType = "header"
 )
 
@@ -41,44 +43,75 @@ type Doc struct {
 	Route     string
 	Params    Params
 	Responses Responses
-	parser    *param.Schema
+	parser    *parser
 }
 
-type Middleware struct {
-	Doc        *Doc
-	HandleFunc HandleFunc
+type parser struct {
+	schemas map[string]*param.Schema
+	types   map[string]ParamType
+}
+
+func newParser(ps Params) (par *parser, err error) {
+	par = &parser{
+		schemas: make(map[string]*param.Schema, len(ps)),
+		types:   make(map[string]ParamType, len(ps)),
+	}
+	for _, p := range ps {
+		schema, ok := p.Schema.(*param.Schema)
+		if !ok {
+			schema, err = param.NewSchema(p.Schema, nil, nil)
+			if err != nil {
+				return nil, err
+			}
+		}
+		par.schemas[schema.Name] = schema
+		par.types[schema.Name] = p.Type
+	}
+	return par, nil
+}
+
+func (p *parser) unmarshal(vs []interface{}, ctx *Context) (err error) {
+	for _, value := range vs {
+		rv := reflect.ValueOf(value)
+		name := rv.Type().Name()
+		schema := p.schemas[name]
+		if schema == nil {
+			return fmt.Errorf("parameter '%s' is not registered", name)
+		}
+		t := p.types[name]
+		var fv *multipart.Form
+		switch t {
+		case Query:
+			fv = &multipart.Form{Value: ctx.Query()}
+		case Path:
+			fv = &multipart.Form{Value: ctx.Path()}
+		case Form:
+			switch schema.EncodeType() {
+			case param.UrlEncodeType:
+				fv = &multipart.Form{Value: ctx.Form()}
+			case param.FormDataEncodeType:
+				fv, err = ctx.parseMultipartForm()
+				if err != nil {
+					return err
+				}
+			}
+		case Header:
+			fv = &multipart.Form{Value: ctx.Request.Header}
+		default:
+			return fmt.Errorf("parameter type '%s' is not allowed", t)
+		}
+		err = schema.Parse(rv.Pointer(), fv)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 type Handler struct {
 	Doc        *Doc
-	Middles    []*Middleware
 	HandleFunc HandleFunc
+	middles    []*Handler
 }
 
 type HandleFunc func(ctx *Context)
-
-type Controller struct {
-	Tag      TagName
-	Handlers []*Handler
-}
-
-type Condition struct {
-	middles []*Middleware
-	router  *router.Router
-}
-
-func (cdt *Condition) Use(middles ...*Middleware) {
-	cdt.middles = append(cdt.middles, middles...)
-}
-
-func (cdt *Condition) Handle(method, route string, handleFunc HandleFunc, doc *Doc) {
-	handler := &Handler{
-		Doc:        doc,
-		Middles:    cdt.middles,
-		HandleFunc: handleFunc,
-	}
-	err := cdt.router.Add(method, route, handler)
-	if err != nil {
-		panic(err)
-	}
-}
