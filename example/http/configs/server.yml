@@ -1,0 +1,18 @@
+# 是否使用 https 加密协议
+use_ssl: false
+
+# 监听 http 端口, 如果开启 SSL, 则当前端口将作为跳转端口, 将所有请求都跳转到 https_port
+http_port: ":9090"
+
+# 监听 https 端口
+https_port: ":443"
+
+ssl_certificate: ""
+
+ssl_certificate_key: ""
+
+# 是否开启 debug
+debug: true
+
+# 开启请求日志, 支持热加载, 只对设置过 middles.Logger 中间件的请求有效
+open_log: true
