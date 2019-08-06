@@ -21,27 +21,39 @@ var tags = xx.ApiTags{
 	{
 		Name: sitesService,
 		Subs: xx.ApiTags{
-			{Name: accountsService},
-			{Name: filesService},
-			{Name: imageLabelsService},
-			{Name: imagesService},
+			{
+				Name: accountsService,
+				Subs: xx.ApiTags{
+					{Name: filesService},
+					{Name: imageLabelsService},
+					{Name: imagesService},
+				},
+			},
 		},
 	},
 }
 
 func main() {
+	xx.Use(xx.Cors)
+	xx.Handle(http.MethodOptions, "/", func(ctx *xx.Context) {}, nil)
 	xx.Handle("GET", "/foo", func(ctx *xx.Context) {
 		ctx.WriteString("bar")
-	}, nil)
+	}, &xx.Doc{
+		Title: "FOO BAR",
+	})
 	xx.Handle("GET", "/{mp}.txt", func(ctx *xx.Context) {
 		ctx.WriteString(ctx.Path().Get("mp"))
-	}, nil)
+	}, &xx.Doc{
+		Title: "MP text",
+	})
 	xx.Handle("GET", "/api-data", func(ctx *xx.Context) {
 		err := ctx.SendJSON(xx.MAP{"doc": xx.DefaultServeMux.ApiDoc()})
 		if err != nil {
 			panic(err)
 		}
-	}, nil)
+	}, &xx.Doc{
+		Title: "API DATA",
+	})
 	group := xx.NewGroup(tags)
 	group = group.Use(mustLogin)
 	accountController := group.Controller(accountsService)

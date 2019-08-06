@@ -17,10 +17,16 @@ type dt struct {
 
 var dts = []*dt{
 	{
+		route: "",
+
+		prefix:  "/",
+		pattern: "^/",
+	},
+	{
 		route: "/",
 
 		prefix:  "/",
-		pattern: "^/$",
+		pattern: "^/",
 	},
 	{
 		route: "/foobar",

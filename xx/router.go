@@ -9,7 +9,7 @@ import (
 )
 
 func NewGroup(tags ApiTags) *RouteGroup {
-	return DefaultServeMux.Group(tags)
+	return DefaultServeMux.NewGroup(tags)
 }
 
 var DefaultTag = NewTagName("defaults")
@@ -22,6 +22,10 @@ var DefaultGroup = NewGroup(
 		},
 	},
 )
+
+func Use(middles ...*Handler) {
+	DefaultGroup = DefaultGroup.Use(middles...)
+}
 
 type RouteGroup struct {
 	middles []*Handler

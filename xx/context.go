@@ -34,6 +34,7 @@ type Context struct {
 	Values        map[string]interface{}
 	multipartForm *multipart.Form
 	handler       *Handler
+	err           error
 	idx           int
 }
 
@@ -73,7 +74,7 @@ func (c *Context) Abort() {
 }
 
 func (c *Context) abortWithError(depth int, err error) error {
-	http.Error(c.Writer, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+	c.err = err
 	c.Abort()
 	return log.Error.Output(depth+1, err.Error())
 }

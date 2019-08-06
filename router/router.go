@@ -153,7 +153,7 @@ func InitRoute(route string) (prefix, pattern string) {
 	switch route {
 	case "", "/":
 		prefix = "/"
-		pattern = "^/$"
+		pattern = "^/"
 	default:
 		prefix = pathPatternMatcher.FindString(route)
 		if prefix != "/" {

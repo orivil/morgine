@@ -11,18 +11,26 @@ import (
 
 func ExampleNewRouter() {
 	r := router.NewRouter()
-
 	err := r.Add("GET", "/{mp}.txt", 1)
 	if err != nil {
-		// must be regular expresion error
+		// if err is not nil, it must be regular expresion error
 		panic(err)
 	}
-	values, action := r.Match("GET", "/123456.txt")
 
+	// match all route
+	r.Add("GET", "/", 2)
+
+	values, action := r.Match("GET", "/123456.txt")
 	fmt.Println(action.(int) == 1)
 	fmt.Println(values().Get("mp") == "123456")
+	_, action = r.Match("GET", "/foo/bar")
+	fmt.Println(action.(int) == 2)
+	_, action = r.Match("GET", "/")
+	fmt.Println(action.(int) == 2)
 
 	// Output:
+	// true
+	// true
 	// true
 	// true
 }
