@@ -6,12 +6,6 @@ package xx
 
 import (
 	"github.com/orivil/morgine/cfg"
-	"sync"
-)
-
-const (
-	// 配置文件名称
-	ServerConfigFile = "server.yml"
 )
 
 var serverConfig = `# 是否使用 https 加密协议
@@ -41,7 +35,7 @@ var Env = &env{
 }
 
 func init() {
-	err := cfg.Unmarshal(ServerConfigFile, serverConfig, Env)
+	err := cfg.Unmarshal("server.yml", serverConfig, Env)
 	if err != nil {
 		panic(err)
 	}
@@ -55,21 +49,4 @@ type env struct {
 	HttpsPort         string `yaml:"https_port" json:"https_port"`
 	Debug             bool   `yaml:"debug" json:"debug"`
 	OpenLog           bool   `yaml:"open_log" json:"open_log"`
-	mu                sync.RWMutex
-}
-
-func (e *env) Get() *env {
-	e.mu.RLock()
-	defer e.mu.RUnlock()
-	return e
-}
-
-func (e *env) Scheme() string {
-	e.mu.RLock()
-	defer e.mu.RUnlock()
-	if e.UseSSL {
-		return "https"
-	} else {
-		return "http"
-	}
 }

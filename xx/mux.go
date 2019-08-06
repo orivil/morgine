@@ -18,6 +18,15 @@ import (
 type ServeMux struct {
 	r               *router.Router
 	NotFoundHandler http.HandlerFunc
+	apiDoc          *apiDoc
+}
+
+func NewServeMux(r *router.Router) *ServeMux {
+	return &ServeMux{
+		r:               r,
+		NotFoundHandler: http.NotFound,
+		apiDoc:          newApiDoc(),
+	}
 }
 
 var contextPool = sync.Pool{
@@ -26,10 +35,16 @@ var contextPool = sync.Pool{
 	},
 }
 
+func (mux *ServeMux) ApiDoc() *apiDoc {
+	return mux.apiDoc
+}
+
 func (mux *ServeMux) Group(tags ApiTags) *RouteGroup {
+	mux.apiDoc.Tags = append(mux.apiDoc.Tags, tags...)
 	return &RouteGroup{
 		tags:   tags,
 		router: mux.r,
+		apiDoc: mux.apiDoc,
 	}
 }
 
@@ -66,13 +81,6 @@ func (mux *ServeMux) ServeHTTP(writer http.ResponseWriter, req *http.Request) {
 
 func GetRequestInfo(r *http.Request) string {
 	return fmt.Sprintf("| %16s | %8s | %s", ip.GetHttpRequestIP(r), r.Method, r.Host+r.URL.Path)
-}
-
-func NewServeMux(r *router.Router) *ServeMux {
-	return &ServeMux{
-		r:               r,
-		NotFoundHandler: http.NotFound,
-	}
 }
 
 var DefaultServeMux = NewServeMux(router.NewRouter())

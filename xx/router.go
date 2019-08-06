@@ -5,18 +5,16 @@
 package xx
 
 import (
-	"fmt"
 	"github.com/orivil/morgine/router"
-	"runtime"
 )
 
-func Group(tags ApiTags) *RouteGroup {
+func NewGroup(tags ApiTags) *RouteGroup {
 	return DefaultServeMux.Group(tags)
 }
 
 var DefaultTag = NewTagName("defaults")
 
-var DefaultGroup = Group(
+var DefaultGroup = NewGroup(
 	ApiTags{
 		{
 			Name: DefaultTag,
@@ -29,6 +27,7 @@ type RouteGroup struct {
 	middles []*Handler
 	tags    ApiTags
 	tagName TagName
+	apiDoc  *apiDoc
 	router  *router.Router
 }
 
@@ -37,15 +36,32 @@ func (g *RouteGroup) copy() *RouteGroup {
 		router:  g.router,
 		tagName: g.tagName,
 		tags:    g.tags,
+		apiDoc:  g.apiDoc,
 	}
-	copy(nc.middles, g.middles)
+	nc.middles = make([]*Handler, len(g.middles))
+	for key, value := range g.middles {
+		nc.middles[key] = value
+	}
 	return nc
 }
 
 func (g *RouteGroup) Use(middles ...*Handler) *RouteGroup {
 	nc := g.copy()
-	initHandlerTrace(2, middles...)
+	for _, middle := range middles {
+		if middle.Doc == nil {
+			middle.Doc = &Doc{}
+		}
+		if middle.Doc.parser == nil {
+			var err error
+			middle.Doc.parser, err = newParser(middle.Doc.Params)
+			if err != nil {
+				panic(err)
+			}
+		}
+	}
+
 	nc.middles = append(nc.middles, middles...)
+	nc.apiDoc.use(middles...)
 	return nc
 }
 
@@ -59,10 +75,13 @@ func (g *RouteGroup) Controller(name TagName) *RouteGroup {
 }
 
 func (g *RouteGroup) Handle(method, route string, handleFunc HandleFunc, doc *Doc) {
-	g.handle(2, method, route, handleFunc, doc)
+	g.handle(1, method, route, handleFunc, doc)
 }
 
 func (g *RouteGroup) handle(depth int, method, route string, handleFunc HandleFunc, doc *Doc) {
+	if doc == nil {
+		doc = &Doc{}
+	}
 	var err error
 	doc.parser, err = newParser(doc.Params)
 	if err != nil {
@@ -71,35 +90,18 @@ func (g *RouteGroup) handle(depth int, method, route string, handleFunc HandleFu
 	if g.tagName == nil {
 		g.tagName = DefaultTag
 	}
-	doc.tagName = g.tagName
-	doc.method = method
-	doc.route = route
 	handler := &Handler{
 		Doc:        doc,
 		middles:    g.middles,
 		HandleFunc: handleFunc,
 	}
-	initHandlerTrace(depth, handler)
 	err = g.router.Add(method, route, handler)
 	if err != nil {
 		panic(err)
 	}
+	g.apiDoc.handle(depth+1, g.tagName, method, route, doc, g.middles)
 }
 
-func initHandlerTrace(depth int, h ...*Handler) {
-	_, file, line, ok := runtime.Caller(depth + 1)
-	if ok {
-		trace := fmt.Sprintf("%s: %d", file, line)
-		for _, handler := range h {
-			handler.Doc.trace = trace
-		}
-	}
+func Handle(method, route string, handleFunc HandleFunc, doc *Doc) {
+	DefaultGroup.handle(1, method, route, handleFunc, doc)
 }
-
-func Handle(method, route string, handleFunc HandleFunc) {
-	DefaultGroup.handle(2, method, route, handleFunc, &Doc{})
-}
-
-var (
-	Middles []*Handler
-)

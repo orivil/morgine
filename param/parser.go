@@ -63,7 +63,7 @@ func (s *Schema) EncodeType() EncodeType {
 func (s *Schema) Parse(pointer uintptr, form *multipart.Form) (err error) {
 	for _, field := range s.Fields {
 		if field.Kind != File {
-			err = field.Setter.SetValue(pointer, form)
+			err = field.setter.SetValue(pointer, form)
 			if err != nil {
 				return err
 			}
@@ -71,7 +71,7 @@ func (s *Schema) Parse(pointer uintptr, form *multipart.Form) (err error) {
 	}
 	for _, field := range s.Fields {
 		if field.Kind == File {
-			err = field.Setter.SetValue(pointer, form)
+			err = field.setter.SetValue(pointer, form)
 			if err != nil {
 				return err
 			}
@@ -90,7 +90,7 @@ type Field struct {
 	// 默认值
 	Value interface{}
 
-	Setter Setter
+	setter Setter
 
 	// 字段类型
 	Kind Kind
@@ -163,7 +163,7 @@ func NewSchema(v interface{}, validator *Validator, filter *Filter) (*Schema, er
 					}
 				}
 			}
-			f.Setter = getSetter(field, f.Name, kind, offset, f.Value, cdt)
+			f.setter = getSetter(field, f.Name, kind, offset, f.Value, cdt)
 			schema.Fields = append(schema.Fields, f)
 		}
 	}

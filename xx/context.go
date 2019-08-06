@@ -266,9 +266,9 @@ func (c *Context) sendData(dt dataType, v interface{}) error {
 	var encoder encoder
 	switch dt {
 	case DataTypeXml:
-		encoder = json.NewEncoder(buf)
-	default:
 		encoder = xml.NewEncoder(buf)
+	default:
+		encoder = json.NewEncoder(buf)
 	}
 	err := encoder.Encode(v)
 	if err != nil {

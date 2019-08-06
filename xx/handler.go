@@ -38,10 +38,6 @@ type Response struct {
 }
 
 type Doc struct {
-	tagName   TagName
-	method    string
-	route     string
-	trace     string
 	Title     string
 	Desc      string
 	Params    Params
