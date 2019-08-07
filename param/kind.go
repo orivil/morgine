@@ -11,6 +11,10 @@ import (
 
 type Kind int
 
+func (k Kind) MarshalJSON() ([]byte, error) {
+	return []byte(`"` + k.String() + `"`), nil
+}
+
 // supported data type
 const (
 	Invalid Kind = iota

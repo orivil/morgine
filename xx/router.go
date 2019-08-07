@@ -73,6 +73,9 @@ func (g *RouteGroup) Controller(name TagName) *RouteGroup {
 	if !g.tags.checkIsSubTag(name) {
 		panic("need the sub of the initialized tags")
 	}
+	if !g.tags.checkIsEndTag(name) {
+		panic("need the end of the initialized tags")
+	}
 	nc := g.copy()
 	nc.tagName = name
 	return nc

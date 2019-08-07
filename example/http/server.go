@@ -11,6 +11,7 @@ import (
 
 var (
 	sitesService       = xx.NewTagName("站点服务")
+	adminService       = xx.NewTagName("管理员服务")
 	accountsService    = xx.NewTagName("管理员账号服务")
 	filesService       = xx.NewTagName("文件服务")
 	imageLabelsService = xx.NewTagName("图片标签服务")
@@ -22,8 +23,9 @@ var tags = xx.ApiTags{
 		Name: sitesService,
 		Subs: xx.ApiTags{
 			{
-				Name: accountsService,
+				Name: adminService,
 				Subs: xx.ApiTags{
+					{Name: accountsService},
 					{Name: filesService},
 					{Name: imageLabelsService},
 					{Name: imagesService},
@@ -63,8 +65,8 @@ func main() {
 
 func handleLogin(method, route string, group *xx.RouteGroup) {
 	type param struct {
-		Username string
-		Password string
+		Username string `required:""`
+		Password string `desc:"密码"`
 	}
 	doc := &xx.Doc{
 		Title: "登录管理员",

@@ -52,3 +52,21 @@ func (tags ApiTags) checkIsSubTag(tag TagName) bool {
 	}
 	return false
 }
+
+func (tags ApiTags) checkIsEndTag(tag TagName) bool {
+	for _, at := range tags {
+		if at.Name == tag {
+			if len(at.Subs) == 0 {
+				return true
+			} else {
+				return false
+			}
+		}
+		if at.Subs != nil {
+			if at.Subs.checkIsEndTag(tag) {
+				return true
+			}
+		}
+	}
+	return false
+}

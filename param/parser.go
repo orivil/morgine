@@ -90,6 +90,8 @@ type Field struct {
 	// 默认值
 	Value interface{}
 
+	Condition *info
+
 	setter Setter
 
 	// 字段类型
@@ -164,6 +166,9 @@ func NewSchema(v interface{}, validator *Validator, filter *Filter) (*Schema, er
 				}
 			}
 			f.setter = getSetter(field, f.Name, kind, offset, f.Value, cdt)
+			if cdt != nil {
+				f.Condition = cdt.getInfo()
+			}
 			schema.Fields = append(schema.Fields, f)
 		}
 	}
