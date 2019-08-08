@@ -4,7 +4,10 @@
 
 package xx
 
-import "net/http"
+import (
+	"fmt"
+	"net/http"
+)
 
 // 服务器响应给客户端的跨域头信息
 var (
@@ -53,6 +56,7 @@ var Cors = &Handler{
 		Desc:  "跨域请求中间件, 该中间件会通过所有跨域请求, 仅用于快速测试, 不要用于线上项目",
 	},
 	HandleFunc: func(ctx *Context) {
+		fmt.Println(ctx.Request.Method, ctx.Request.URL)
 		var origins []string
 		var headers []string
 		var methods []string

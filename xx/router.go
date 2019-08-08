@@ -23,6 +23,7 @@ var DefaultGroup = NewGroup(
 	},
 )
 
+// 设置默认路由组的中间件, 该设置不会影响其他自定义路由组
 func Use(middles ...*Handler) {
 	DefaultGroup = DefaultGroup.Use(middles...)
 }
@@ -49,6 +50,7 @@ func (g *RouteGroup) copy() *RouteGroup {
 	return nc
 }
 
+// 创建新的子路由组并继承父路由组, 且为子路由组添加中间件, 返回子路由组
 func (g *RouteGroup) Use(middles ...*Handler) *RouteGroup {
 	nc := g.copy()
 	for _, middle := range middles {
@@ -69,23 +71,25 @@ func (g *RouteGroup) Use(middles ...*Handler) *RouteGroup {
 	return nc
 }
 
+// 创建新的子路由组并继承父路由组, 且为子路由组命名, 返回子路由组.
+// 子路由组的 name 标签必须是祖先路由组的叶子节点.
 func (g *RouteGroup) Controller(name TagName) *RouteGroup {
 	if !g.tags.checkIsSubTag(name) {
 		panic("need the sub of the initialized tags")
 	}
 	if !g.tags.checkIsEndTag(name) {
-		panic("need the end of the initialized tags")
+		panic("need the leaf node of the initialized tags")
 	}
 	nc := g.copy()
 	nc.tagName = name
 	return nc
 }
 
-func (g *RouteGroup) Handle(method, route string, handleFunc HandleFunc, doc *Doc) {
-	g.handle(1, method, route, handleFunc, doc)
+func (g *RouteGroup) Handle(method, route string, doc *Doc, handleFunc HandleFunc) {
+	g.handle(1, method, route, doc, handleFunc)
 }
 
-func (g *RouteGroup) handle(depth int, method, route string, handleFunc HandleFunc, doc *Doc) {
+func (g *RouteGroup) handle(depth int, method, route string, doc *Doc, handleFunc HandleFunc) {
 	if doc == nil {
 		doc = &Doc{}
 	}
@@ -109,6 +113,6 @@ func (g *RouteGroup) handle(depth int, method, route string, handleFunc HandleFu
 	g.apiDoc.handle(depth+1, g.tagName, method, route, doc, g.middles)
 }
 
-func Handle(method, route string, handleFunc HandleFunc, doc *Doc) {
-	DefaultGroup.handle(1, method, route, handleFunc, doc)
+func Handle(method, route string, doc *Doc, handleFunc HandleFunc) {
+	DefaultGroup.handle(1, method, route, doc, handleFunc)
 }

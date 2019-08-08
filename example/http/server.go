@@ -37,27 +37,27 @@ var tags = xx.ApiTags{
 
 func main() {
 	xx.Use(xx.Cors)
-	xx.Handle(http.MethodOptions, "/", func(ctx *xx.Context) {}, nil)
-	xx.Handle("GET", "/foo", func(ctx *xx.Context) {
-		ctx.WriteString("bar")
-	}, &xx.Doc{
+	xx.Handle(http.MethodOptions, "/", nil, func(ctx *xx.Context) {})
+	xx.Handle("GET", "/foo", &xx.Doc{
 		Title: "FOO BAR",
+	}, func(ctx *xx.Context) {
+		ctx.WriteString("bar")
 	})
-	xx.Handle("GET", "/{mp}.txt", func(ctx *xx.Context) {
-		ctx.WriteString(ctx.Path().Get("mp"))
-	}, &xx.Doc{
+	xx.Handle("GET", "/{mp}.txt", &xx.Doc{
 		Title: "MP text",
+	}, func(ctx *xx.Context) {
+		ctx.WriteString(ctx.Path().Get("mp"))
 	})
-	xx.Handle("GET", "/api-data", func(ctx *xx.Context) {
+	xx.Handle("GET", "/api-data", &xx.Doc{
+		Title: "API DATA",
+	}, func(ctx *xx.Context) {
 		err := ctx.SendJSON(xx.MAP{"doc": xx.DefaultServeMux.ApiDoc()})
 		if err != nil {
 			panic(err)
 		}
-	}, &xx.Doc{
-		Title: "API DATA",
 	})
 	group := xx.NewGroup(tags)
-	group = group.Use(mustLogin)
+	group = group.Use(xx.Cors, mustLogin)
 	accountController := group.Controller(accountsService)
 	handleLogin("GET", "/login", accountController)
 	xx.Run()
@@ -77,7 +77,7 @@ func handleLogin(method, route string, group *xx.RouteGroup) {
 			},
 		},
 	}
-	group.Handle(method, route, func(ctx *xx.Context) {
+	group.Handle(method, route, doc, func(ctx *xx.Context) {
 		p := &param{}
 		err := ctx.Unmarshal(p)
 		if err != nil {
@@ -85,7 +85,7 @@ func handleLogin(method, route string, group *xx.RouteGroup) {
 		} else {
 			ctx.SendJSON(p)
 		}
-	}, doc)
+	})
 }
 
 var mustLogin = func() *xx.Handler {
@@ -103,7 +103,7 @@ var mustLogin = func() *xx.Handler {
 				},
 			},
 			Responses: xx.Responses{{
-				Code: http.StatusForbidden,
+				//Code: http.StatusForbidden,
 				Body: xx.MsgData(xx.MsgTypeWarning, "需要管理员权限"),
 			}},
 		},
