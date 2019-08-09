@@ -138,10 +138,14 @@ func NewSchema(v interface{}, validator *Validator, filter *Filter) (*Schema, er
 			if kind == Invalid {
 				return nil, fmt.Errorf("field '%s': the kind is invalid", field.Name)
 			}
+			timeLayout := field.Tag.Get(TimeLayoutTag)
+			if timeLayout == "" {
+				timeLayout = DefaultTimeLayout
+			}
 			f := &Field{
 				Name:  fieldName(field),
 				Desc:  fieldDesc(field),
-				Value: fieldDefaultValue(kind, ptr, field.Offset),
+				Value: fieldDefaultValue(timeLayout, kind, ptr, field.Offset),
 				Kind:  kind,
 			}
 
@@ -165,7 +169,7 @@ func NewSchema(v interface{}, validator *Validator, filter *Filter) (*Schema, er
 					}
 				}
 			}
-			f.setter = getSetter(field, f.Name, kind, offset, f.Value, cdt)
+			f.setter = getSetter(f.Name, timeLayout, kind, offset, f.Value, cdt)
 			if cdt != nil {
 				f.Condition = cdt.getInfo()
 			}
@@ -209,7 +213,7 @@ func fieldDesc(field reflect.StructField) string {
 	return field.Tag.Get("desc")
 }
 
-func fieldDefaultValue(kind Kind, ptr, offset uintptr) interface{} {
+func fieldDefaultValue(layout string, kind Kind, ptr, offset uintptr) interface{} {
 	switch kind {
 	case String:
 		return *(*string)(unsafe.Pointer(ptr + offset))
@@ -235,11 +239,11 @@ func fieldDefaultValue(kind Kind, ptr, offset uintptr) interface{} {
 		}
 		return f
 	case TimePtr:
-		def := *(**time.Time)(unsafe.Pointer(ptr + offset))
-		if def != nil {
-			return def
+		dt := *(**time.Time)(unsafe.Pointer(ptr + offset))
+		if dt == nil {
+			dt = &time.Time{}
 		}
-		return &time.Time{}
+		return dt.Format(layout)
 	case SliceString:
 		return *(*[]string)(unsafe.Pointer(ptr + offset))
 	case SliceInt:
@@ -259,7 +263,7 @@ func fieldDefaultValue(kind Kind, ptr, offset uintptr) interface{} {
 	}
 }
 
-func getSetter(field reflect.StructField, param string, kind Kind, offset uintptr, dvalue interface{}, cdt *condition) setter {
+func getSetter(param, timeLayout string, kind Kind, offset uintptr, dvalue interface{}, cdt *condition) setter {
 	switch kind {
 	case String:
 		return newStringSetter(param, offset, dvalue.(string), cdt)
@@ -278,11 +282,7 @@ func getSetter(field reflect.StructField, param string, kind Kind, offset uintpt
 	case File:
 		return newFileSetter(param, offset, dvalue.(FileHandler), cdt)
 	case TimePtr:
-		layout := field.Tag.Get(TimeLayoutTag)
-		if layout == "" {
-			layout = DefaultTimeLayout
-		}
-		return newTimeSetter(param, layout, offset, dvalue.(*time.Time), cdt)
+		return newTimeSetter(param, timeLayout, offset, dvalue.(string), cdt)
 	case SliceString:
 		return newSliceStringSetter(param, offset, dvalue.([]string), cdt)
 	case SliceInt:
@@ -507,7 +507,7 @@ func newFileSetter(param string, offset uintptr, dvalue FileHandler, cdt *condit
 	}
 }
 
-func newTimeSetter(param, layout string, offset uintptr, dvalue *time.Time, cdt *condition) setter {
+func newTimeSetter(param, layout string, offset uintptr, dvalue string, cdt *condition) setter {
 	return func(begin uintptr, form *multipart.Form) (err error) {
 		if cdt != nil {
 			err = cdt.validTime(param, form)
@@ -516,14 +516,13 @@ func newTimeSetter(param, layout string, offset uintptr, dvalue *time.Time, cdt 
 			}
 		}
 		text := url.Values(form.Value).Get(param)
+		if len(text) == 0 {
+			text = dvalue
+		}
 		var t time.Time
-		if len(text) > 0 {
-			t, err = time.Parse(layout, text)
-			if err != nil {
-				return
-			}
-		} else {
-			t = time.Unix(0, dvalue.UnixNano())
+		t, err = time.Parse(layout, text)
+		if err != nil {
+			return
 		}
 		*(**time.Time)(unsafe.Pointer(begin + offset)) = &t
 		return
@@ -534,6 +533,7 @@ func newSliceStringSetter(param string, offset uintptr, dvalue []string, cdt *co
 	return func(begin uintptr, form *multipart.Form) (err error) {
 		values := getSliceValues(param, form)
 		if len(dvalue) > 0 && len(values) == 0 {
+			values = make([]string, len(dvalue))
 			copy(values, dvalue)
 		}
 		*(*[]string)(unsafe.Pointer(begin + offset)) = values
@@ -563,6 +563,7 @@ func newSliceIntSetter(param string, offset uintptr, dvalue []int, cdt *conditio
 				}
 			}
 		} else {
+			ints = make([]int, len(dvalue))
 			copy(ints, dvalue)
 		}
 		*(*[]int)(unsafe.Pointer(begin + offset)) = ints
@@ -593,6 +594,7 @@ func newSliceInt32Setter(param string, offset uintptr, dvalue []int32, cdt *cond
 				ints[idx] = int32(i32)
 			}
 		} else {
+			ints = make([]int32, len(dvalue))
 			copy(ints, dvalue)
 		}
 		*(*[]int32)(unsafe.Pointer(begin + offset)) = ints
@@ -623,6 +625,7 @@ func newSliceInt64Setter(param string, offset uintptr, dvalue []int64, cdt *cond
 				ints[idx] = i64
 			}
 		} else {
+			ints = make([]int64, len(dvalue))
 			copy(ints, dvalue)
 		}
 		*(*[]int64)(unsafe.Pointer(begin + offset)) = ints
@@ -653,6 +656,7 @@ func newSliceFloat32Setter(param string, offset uintptr, dvalue []float32, cdt *
 				floats[idx] = float32(f32)
 			}
 		} else {
+			floats = make([]float32, len(dvalue))
 			copy(floats, dvalue)
 		}
 		*(*[]float32)(unsafe.Pointer(begin + offset)) = floats
@@ -683,6 +687,7 @@ func newSliceFloat64Setter(param string, offset uintptr, dvalue []float64, cdt *
 				floats[idx] = f64
 			}
 		} else {
+			floats = make([]float64, len(dvalue))
 			copy(floats, dvalue)
 		}
 		*(*[]float64)(unsafe.Pointer(begin + offset)) = floats
@@ -712,6 +717,7 @@ func newSliceBoolSetter(param string, offset uintptr, dvalue []bool, cdt *condit
 				}
 			}
 		} else {
+			bools = make([]bool, len(dvalue))
 			copy(bools, dvalue)
 		}
 		*(*[]bool)(unsafe.Pointer(begin + offset)) = bools
@@ -730,16 +736,24 @@ func newSliceBoolSetter(param string, offset uintptr, dvalue []bool, cdt *condit
 
 func getSliceValues(param string, form *multipart.Form) (vs []string) {
 	// normal type: foo[]=1&foo[]=2
-	vs = form.Value[param+"[]"]
-
+	vs = initSliceString(form.Value[param+"[]"])
 	if len(vs) == 0 {
 		// traditional type: foo=1&foo=2
-		vs = form.Value[param]
+		vs = initSliceString(form.Value[param])
 	}
 	// other type: foo=1,2
 	if len(vs) == 1 && strings.Contains(vs[0], ",") {
 		return strings.Split(vs[0], ",")
 	} else {
 		return vs
+	}
+}
+
+// transform []string{""} to nil, otherwise case bugs
+func initSliceString(ss []string) []string {
+	if len(ss) == 1 && ss[0] == "" {
+		return nil
+	} else {
+		return ss
 	}
 }

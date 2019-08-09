@@ -8,3 +8,7 @@ import "mime/multipart"
 
 // FileHandler 定义上传文件处理函数, field 是上传文件的字段名, header 为上传文件的信息
 type FileHandler func(field string, header *multipart.FileHeader) error
+
+func (h FileHandler) MarshalJSON() ([]byte, error) {
+	return []byte(`""`), nil
+}

@@ -5,8 +5,10 @@
 package main
 
 import (
+	"github.com/orivil/morgine/param"
 	"github.com/orivil/morgine/xx"
 	"net/http"
+	"time"
 )
 
 var (
@@ -43,11 +45,28 @@ func main() {
 	}, func(ctx *xx.Context) {
 		ctx.WriteString("bar")
 	})
-	xx.Handle("GET", "/{mp}.txt", &xx.Doc{
-		Title: "MP text",
-	}, func(ctx *xx.Context) {
-		ctx.WriteString(ctx.Path().Get("mp"))
-	})
+	{
+		type mp struct {
+			mp string
+		}
+		xx.Handle("GET", "/{mp}.txt", &xx.Doc{
+			Title: "MP text",
+			Params: xx.Params{
+				{
+					Type:   xx.Path,
+					Schema: &mp{},
+				},
+			},
+		}, func(ctx *xx.Context) {
+			p := &mp{}
+			err := ctx.Unmarshal(p)
+			if err != nil {
+				ctx.MsgWarning(err.Error())
+			} else {
+				ctx.WriteString(p.mp)
+			}
+		})
+	}
 	xx.Handle("GET", "/api-data", &xx.Doc{
 		Title: "API DATA",
 	}, func(ctx *xx.Context) {
@@ -64,21 +83,37 @@ func main() {
 }
 
 func handleLogin(method, route string, group *xx.RouteGroup) {
-	type param struct {
-		Username string `required:""`
-		Password string `desc:"密码"`
+	type pm struct {
+		Username     string `required:""`
+		Password     string `desc:"密码"`
+		String       string
+		Int          int
+		Int32        int32
+		Int64        int64
+		Float32      float32
+		Float64      float64
+		Bool         bool
+		File         param.FileHandler
+		Time         *time.Time
+		SliceString  []string
+		SliceInt     []int
+		SliceInt32   []int32
+		SliceInt64   []int64
+		SliceFloat32 []float32
+		SliceFloat64 []float64
+		SliceBool    []bool
 	}
 	doc := &xx.Doc{
 		Title: "登录管理员",
 		Params: xx.Params{
 			{
 				Type:   xx.Query,
-				Schema: &param{},
+				Schema: &pm{},
 			},
 		},
 	}
 	group.Handle(method, route, doc, func(ctx *xx.Context) {
-		p := &param{}
+		p := &pm{}
 		err := ctx.Unmarshal(p)
 		if err != nil {
 			ctx.MsgWarning(err.Error())
