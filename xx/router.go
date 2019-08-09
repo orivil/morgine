@@ -65,7 +65,6 @@ func (g *RouteGroup) Use(middles ...*Handler) *RouteGroup {
 			}
 		}
 	}
-
 	nc.middles = append(nc.middles, middles...)
 	nc.apiDoc.use(middles...)
 	return nc
