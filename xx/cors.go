@@ -50,6 +50,12 @@ func ExposeCrossSiteHeaders(header http.Header, headers []string) {
 	header[exposeHeaders] = append(header[exposeHeaders], headers...)
 }
 
+// 默认允许跨域请求的 header 头
+var DefaultCorsHeaders = []string{"Content-Type"}
+
+// 默认允许跨域响应的 header 头
+var DefaultExposeHeaders = []string{"Middleware"}
+
 var Cors = &Handler{
 	Doc: &Doc{
 		Title: "Cross Site Access",
@@ -72,12 +78,13 @@ var Cors = &Handler{
 				origin = "*"
 			}
 			origins = []string{origin}
-			headers = []string{"Content-Type"}
+			headers = DefaultCorsHeaders
 			methods = []string{ctx.Request.Method}
 		}
 		writerHeader := ctx.Writer.Header()
 		AllowCrossSiteOrigin(writerHeader, origins)
 		AllowCrossSiteHeaders(writerHeader, headers)
 		AllowCrossSiteMethods(writerHeader, methods)
+		ExposeCrossSiteHeaders(writerHeader, DefaultExposeHeaders)
 	},
 }

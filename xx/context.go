@@ -15,7 +15,9 @@ import (
 	"mime/multipart"
 	"net/http"
 	"net/url"
+	"strconv"
 	"sync"
+	"unsafe"
 )
 
 // 上传文件时最大内存使用量, 超过最大内存则暂存于硬盘中
@@ -54,8 +56,11 @@ func initContext(ctx *Context, res http.ResponseWriter, req *http.Request, rvs r
 
 func (c *Context) handle() {
 	if ln := len(c.handler.middles); c.idx == ln {
+		c.Writer.Header().Del("Middleware")
 		c.handler.HandleFunc(c)
 	} else if c.idx < ln {
+		middle := c.handler.middles[c.idx]
+		c.Writer.Header().Set("Middleware", strconv.Itoa(int(uintptr(unsafe.Pointer(middle)))))
 		c.handler.middles[c.idx].HandleFunc(c)
 		c.idx++
 		c.handle()

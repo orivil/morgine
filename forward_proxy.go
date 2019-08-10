@@ -11,7 +11,10 @@ import (
 var passwd = "wen123456"
 
 func main() {
-	var s = []string{""}
+	var s = []string{"null"}
 	fmt.Println(len(s))
+	if len(s) == 1 && s[0] == "" || s[0] == "null" {
+		fmt.Println(true)
+	}
 	fmt.Println(s)
 }

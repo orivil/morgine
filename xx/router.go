@@ -5,7 +5,11 @@
 package xx
 
 import (
+	"fmt"
+	"github.com/orivil/morgine/param"
 	"github.com/orivil/morgine/router"
+	"net/http"
+	"strings"
 )
 
 func NewGroup(tags ApiTags) *RouteGroup {
@@ -88,7 +92,19 @@ func (g *RouteGroup) Handle(method, route string, doc *Doc, handleFunc HandleFun
 	g.handle(1, method, route, doc, handleFunc)
 }
 
+type ParameterError struct {
+	Name        string
+	ContentType param.EncodeType
+	Type        ParamType
+	Method      string
+}
+
+func (p *ParameterError) Error() string {
+	return fmt.Sprintf("parameter %s is illegal: ContentType [%s], Location [%s], Method [%s]", p.Name, p.ContentType, p.Type, p.Method)
+}
+
 func (g *RouteGroup) handle(depth int, method, route string, doc *Doc, handleFunc HandleFunc) {
+	method = strings.ToUpper(method)
 	if doc == nil {
 		doc = &Doc{}
 	}
@@ -96,6 +112,32 @@ func (g *RouteGroup) handle(depth int, method, route string, doc *Doc, handleFun
 	doc.parser, err = newParser(doc.Params)
 	if err != nil {
 		panic(err)
+	}
+	for name, schema := range doc.parser.schemas {
+		switch ct := schema.EncodeType(); ct {
+		case param.FormDataEncodeType:
+			typ := doc.parser.types[name]
+			switch typ {
+			case Form:
+			default:
+				panic(&ParameterError{
+					Name:        name.String(),
+					ContentType: ct,
+					Type:        typ,
+					Method:      method,
+				})
+			}
+			switch method {
+			case http.MethodPost, http.MethodPut:
+			default:
+				panic(&ParameterError{
+					Name:        name.String(),
+					ContentType: ct,
+					Type:        typ,
+					Method:      method,
+				})
+			}
+		}
 	}
 	if g.tagName == nil {
 		g.tagName = DefaultTag

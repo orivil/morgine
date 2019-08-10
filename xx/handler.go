@@ -46,14 +46,23 @@ type Doc struct {
 }
 
 type parser struct {
-	schemas map[string]*param.Schema
-	types   map[string]ParamType
+	schemas map[reflect.Type]*param.Schema
+	types   map[reflect.Type]ParamType
+}
+
+func (p *parser) rangeSchema(call func(tp ParamType, schema *param.Schema) (stop bool)) {
+	for key, schema := range p.schemas {
+		tp := p.types[key]
+		if call(tp, schema) {
+			return
+		}
+	}
 }
 
 func newParser(ps Params) (par *parser, err error) {
 	par = &parser{
-		schemas: make(map[string]*param.Schema, len(ps)),
-		types:   make(map[string]ParamType, len(ps)),
+		schemas: make(map[reflect.Type]*param.Schema, len(ps)),
+		types:   make(map[reflect.Type]ParamType, len(ps)),
 	}
 	for _, p := range ps {
 		schema, ok := p.Schema.(*param.Schema)
@@ -63,8 +72,8 @@ func newParser(ps Params) (par *parser, err error) {
 				return nil, err
 			}
 		}
-		par.schemas[schema.Name] = schema
-		par.types[schema.Name] = p.Type
+		par.schemas[schema.Type] = schema
+		par.types[schema.Type] = p.Type
 	}
 	return par, nil
 }
@@ -72,12 +81,12 @@ func newParser(ps Params) (par *parser, err error) {
 func (p *parser) unmarshal(vs []interface{}, ctx *Context) (err error) {
 	for _, value := range vs {
 		rv := reflect.ValueOf(value)
-		name := rv.Type().Name()
-		schema := p.schemas[name]
+		rt := rv.Type()
+		schema := p.schemas[rt]
 		if schema == nil {
-			return fmt.Errorf("parameter '%s' is not registered", name)
+			return fmt.Errorf("parameter '%s' is not registered", rt)
 		}
-		t := p.types[name]
+		t := p.types[rt]
 		var fv *multipart.Form
 		switch t {
 		case Query:

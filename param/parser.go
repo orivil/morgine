@@ -44,8 +44,7 @@ type Parser interface {
 }
 
 type Schema struct {
-	Pkg    string
-	Name   string
+	Type   reflect.Type
 	Fields []*Field
 }
 
@@ -111,8 +110,7 @@ func (s setter) SetValue(begin uintptr, form *multipart.Form) error {
 func NewSchema(v interface{}, validator *Validator, filter *Filter) (*Schema, error) {
 	t := reflect.TypeOf(v)
 	schema := &Schema{
-		Pkg:  t.PkgPath(),
-		Name: t.Name(),
+		Type: t,
 	}
 	if t.Kind() != reflect.Ptr || t.Elem().Kind() != reflect.Struct {
 		return nil, fmt.Errorf("need struct pointer, got %v", t)
@@ -491,7 +489,10 @@ func newBoolSetter(param string, offset uintptr, dvalue bool) setter {
 func newFileSetter(param string, offset uintptr, dvalue FileHandler, cdt *condition) setter {
 	return func(begin uintptr, form *multipart.Form) (err error) {
 		if cdt != nil {
-			return cdt.validFile(param, form)
+			err = cdt.validFile(param, form)
+			if err != nil {
+				return err
+			}
 		}
 		handler := *(*FileHandler)(unsafe.Pointer(begin + offset))
 		if handler == nil {
@@ -749,11 +750,12 @@ func getSliceValues(param string, form *multipart.Form) (vs []string) {
 	}
 }
 
-// transform []string{""} to nil, otherwise case bugs
+// transform []string{""}, []string{"null"} to nil, otherwise case bugs
 func initSliceString(ss []string) []string {
-	if len(ss) == 1 && ss[0] == "" {
-		return nil
-	} else {
-		return ss
+	if len(ss) == 1 {
+		if ss[0] == "" || ss[0] == "null" {
+			return nil
+		}
 	}
+	return ss
 }

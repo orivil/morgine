@@ -7,7 +7,11 @@ package main
 import (
 	"github.com/orivil/morgine/param"
 	"github.com/orivil/morgine/xx"
+	"io/ioutil"
+	"mime/multipart"
 	"net/http"
+	"os"
+	"path/filepath"
 	"time"
 )
 
@@ -78,7 +82,7 @@ func main() {
 	group := xx.NewGroup(tags)
 	group = group.Use(xx.Cors, mustLogin)
 	accountController := group.Controller(accountsService)
-	handleLogin("GET", "/login", accountController)
+	handleLogin("POST", "/login", accountController)
 	xx.Run()
 }
 
@@ -107,8 +111,22 @@ func handleLogin(method, route string, group *xx.RouteGroup) {
 		Title: "登录管理员",
 		Params: xx.Params{
 			{
-				Type:   xx.Query,
-				Schema: &pm{},
+				Type: xx.Form,
+				Schema: &pm{
+					SliceInt: []int{1, 2, 3},
+					File: func(field string, header *multipart.FileHeader) error {
+						fs, err := header.Open()
+						if err != nil {
+							return err
+						}
+						defer fs.Close()
+						data, err := ioutil.ReadAll(fs)
+						if err != nil {
+							return err
+						}
+						return ioutil.WriteFile(filepath.Join("imgs", header.Filename), data, os.ModePerm)
+					},
+				},
 			},
 		},
 	}
