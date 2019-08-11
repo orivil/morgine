@@ -10,7 +10,7 @@ import (
 	"github.com/orivil/morgine/xx"
 )
 
-func getAuthoration(method, route string, r *xx.RouteGroup) {
+func getAuthorization(method, route string, r *xx.RouteGroup) {
 	type ps struct {
 		Username string `required:"用户名不能为空"`
 		Password string `required:"密码不能为空"`
