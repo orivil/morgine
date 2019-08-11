@@ -5,8 +5,7 @@
 package timer
 
 import (
-	log2 "gitee.com/orivil/morgine/log"
-	"log"
+	"github.com/orivil/morgine/log"
 	"runtime"
 	"sync"
 	"time"
@@ -17,7 +16,6 @@ type Callback func(now *time.Time)
 type TickerRunner struct {
 	signals          []chan *time.Time
 	startImmediately bool
-	Logger           *log.Logger
 	close            chan struct{}
 	mu               sync.RWMutex
 }
@@ -39,7 +37,7 @@ func (tr *TickerRunner) AddCallback(call Callback) {
 				const size = 64 << 10
 				buf := make([]byte, size)
 				buf = buf[:runtime.Stack(buf, false)]
-				tr.Logger.Printf("panic: %v \n%s\n", err, buf)
+				log.Panic.Printf("panic: %v \n%s\n", err, buf)
 			}
 		}()
 		for {
@@ -58,7 +56,6 @@ func (tr *TickerRunner) AddCallback(call Callback) {
 
 func NewTickerRunner(heartbeat time.Duration, startTime *time.Time, startImmediately bool) *TickerRunner {
 	runner := &TickerRunner{
-		Logger:           log2.Emergency,
 		startImmediately: startImmediately,
 		close:            make(chan struct{}),
 	}

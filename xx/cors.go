@@ -5,7 +5,6 @@
 package xx
 
 import (
-	"fmt"
 	"net/http"
 )
 
@@ -62,7 +61,6 @@ var Cors = &Handler{
 		Desc:  "跨域请求中间件, 该中间件会通过所有跨域请求, 仅用于快速测试, 不要用于线上项目",
 	},
 	HandleFunc: func(ctx *Context) {
-		fmt.Println(ctx.Request.Method, ctx.Request.URL)
 		var origins []string
 		var headers []string
 		var methods []string

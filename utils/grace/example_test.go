@@ -7,7 +7,7 @@ package grace_test
 import (
 	"context"
 	"database/sql"
-	"github.com/orivil/morgine/grace"
+	"github.com/orivil/morgine/utils/grace"
 	"log"
 	"net/http"
 )

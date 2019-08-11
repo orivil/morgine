@@ -4,7 +4,7 @@
 
 package crypto
 
-type Crypto interface {
+type Interface interface {
 	Encrypt(text []byte) ([]byte, error)
 	Decrypt(text []byte) ([]byte, error)
 }

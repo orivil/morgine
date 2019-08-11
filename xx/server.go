@@ -8,8 +8,8 @@ package xx
 
 import (
 	"context"
-	"github.com/orivil/morgine/grace"
 	"github.com/orivil/morgine/log"
+	"github.com/orivil/morgine/utils/grace"
 	"net/http"
 	"os"
 	"time"
