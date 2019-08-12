@@ -90,3 +90,13 @@ func SignIn(username, password string) (a *Admin, err error) {
 	}
 	return exist, nil
 }
+
+func GetAdmin(id int) (*Admin, error) {
+	admin := &Admin{}
+	err := db.GORM.Where("id=?", id).First(admin).Error
+	if err != nil {
+		return nil, err
+	} else {
+		return admin, nil
+	}
+}

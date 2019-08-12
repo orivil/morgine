@@ -6,7 +6,7 @@ package accounts
 
 import (
 	"encoding/base64"
-	"fmt"
+	"github.com/dgrijalva/jwt-go"
 	"github.com/orivil/morgine/bundles/admin/model"
 	"github.com/orivil/morgine/bundles/utils/crypto"
 	"github.com/orivil/morgine/xx"
@@ -17,6 +17,8 @@ import (
 	"time"
 )
 
+const AuthScheme = "Bearer "
+
 var AuthorizationMaxAge = int64(3600) * 24 * 7 // 授权过期时间，单位：秒
 
 var (
@@ -26,67 +28,127 @@ var (
 )
 
 type AdminSessions struct {
-	data map[string]*model.Admin
+	data map[int]*model.Admin
 	mu   sync.RWMutex
 }
 
-func (as *AdminSessions) Set(key string, admin *model.Admin) {
+func (as *AdminSessions) Set(admin *model.Admin) {
 	as.mu.Lock()
 	defer as.mu.Unlock()
-	as.data[key] = admin
+	as.data[admin.ID] = admin
 }
 
-func (as *AdminSessions) Get(key string) (admin *model.Admin) {
-	if key != "" {
-		as.mu.RLock()
-		defer as.mu.RUnlock()
-		return as.data[key]
-	}
-	return nil
+func (as *AdminSessions) Get(id int) (admin *model.Admin) {
+	as.mu.RLock()
+	defer as.mu.RUnlock()
+	return as.data[id]
 }
 
-func (as *AdminSessions) Del(key string) {
+func (as *AdminSessions) Del(id int) {
 	as.mu.Lock()
 	defer as.mu.Unlock()
-	delete(as.data, key)
+	delete(as.data, id)
 }
 
 var AdminSessionContainer = &AdminSessions{
-	data: make(map[string]*model.Admin, 10),
+	data: make(map[int]*model.Admin, 10),
 }
 
-var loginContextKey = "login-admin"
+var adminIDContextKey = "loginAdminID"
 
-func GetAdminFromSession(ctx *xx.Context) (*model.Admin, error) {
-	admin, ok := ctx.Get(loginContextKey).(*model.Admin)
-	if ok {
-		return admin, nil
+func NewAdminAuthMiddleware(key []byte) *xx.Handler {
+	type ps struct {
+		Authorization string
 	}
-	auth := ctx.Request.Header.Get("Authorization")
-	if auth != "" {
-		admin = AdminSessionContainer.Get(auth)
-		if admin == nil {
-			username, password, err := DecodeBasicAuthorization(auth)
-			if err == nil {
-				return nil, err
+	doc := &xx.Doc{
+		Title: "管理员登陆中间件",
+		Params: xx.Params{
+			{
+				Type:   xx.Header,
+				Schema: &ps{},
+			},
+		},
+		Responses: xx.Responses{
+			{
+				Body: xx.MsgData(xx.MsgTypeWarning, "管理员未登录"),
+			},
+			{
+				Body: xx.MsgData(xx.MsgTypeWarning, "管理员授权过期"),
+			},
+			{
+				Body: xx.MsgData(xx.MsgTypeWarning, "管理员授权失败"),
+			},
+		},
+	}
+	return &xx.Handler{
+		Doc: doc,
+		HandleFunc: func(ctx *xx.Context) {
+			p := &ps{}
+			err := ctx.Unmarshal(p)
+			if err != nil {
+				ctx.Error(err)
 			} else {
-				admin, _ = model.SignIn(username, password)
-				if admin != nil {
-					AdminSessionContainer.Set(username, admin)
+				if p.Authorization == "" {
+					ctx.MsgWarning("管理员未登录")
+				} else {
+					auth := strings.TrimPrefix(p.Authorization, AuthScheme)
+					token, err := jwt.ParseWithClaims(auth, &jwt.StandardClaims{}, func(token *jwt.Token) (i interface{}, e error) {
+						return key, nil
+					})
+					if err != nil {
+						ctx.Error(err)
+					} else {
+						if !token.Valid {
+							ctx.MsgWarning("管理员授权失败")
+						} else {
+							claims := token.Claims.(*jwt.StandardClaims)
+							if !claims.VerifyExpiresAt(time.Now().Unix(), true) {
+								ctx.MsgWarning("管理员授权过期")
+							} else {
+								id, err := strconv.Atoi(claims.Id)
+								if err != nil {
+									ctx.Error(err)
+								} else {
+									ctx.Set(adminIDContextKey, id)
+								}
+							}
+						}
+					}
 				}
 			}
-		}
-		if admin != nil {
-			ctx.Set(loginContextKey, admin)
-			return admin, nil
-		}
+		},
 	}
-	return nil, ErrBasicAuthorizeFailed
 }
 
-func MustGetAdmin(ctx *xx.Context) *model.Admin {
-	admin, _ := GetAdminFromSession(ctx)
-	return admin
+var adminContextKey = "adminContextKey"
+
+// 从上下文中获取管理员信息，需要在中间件之后使用
+func GetAdminFromContext(ctx *xx.Context) (*model.Admin, bool) {
+	admin, ok := ctx.Get(adminContextKey).(*model.Admin)
+	if ok {
+		return admin, ok
+	} else {
+		id, ok := ctx.Get(adminIDContextKey).(int)
+		if !ok {
+			return nil, false
+		}
+		admin, _ = model.GetAdmin(id)
+		if admin != nil {
+			ctx.Set(adminContextKey, admin)
+			return admin, ok
+		}
+	}
+	return nil, false
+}
+
+// 从上下文中获取管理员ID，需要在中间件之后使用
+func GetAdminIDFromContext(ctx *xx.Context) (int, bool) {
+	id, ok := ctx.Get(adminIDContextKey).(int)
+	return id, ok
+}
+
+func LoginHandler(ctx *xx.Context) {
+	ff
 }
 
 func EncodeBasicAuthorization(username, password string) (auth string, err error) {
