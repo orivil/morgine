@@ -15,10 +15,13 @@ import (
 	"time"
 )
 
+type RequestLogger func(req *http.Request, costTime time.Duration, statusCode int)
+
 type ServeMux struct {
 	r               *router.Router
 	NotFoundHandler http.HandlerFunc
 	ErrHandler      func(w http.ResponseWriter, error string, code int)
+	RequestLogger   RequestLogger
 	apiDoc          *apiDoc
 }
 
@@ -27,7 +30,10 @@ func NewServeMux(r *router.Router) *ServeMux {
 		r:               r,
 		NotFoundHandler: http.NotFound,
 		ErrHandler:      http.Error,
-		apiDoc:          newApiDoc(),
+		RequestLogger: func(req *http.Request, costTime time.Duration, statusCode int) {
+			log.Info.Printf("| %14s | %4d %s \n\n", costTime, statusCode, GetRequestInfo(req))
+		},
+		apiDoc: newApiDoc(),
 	}
 }
 
@@ -51,13 +57,13 @@ func (mux *ServeMux) NewGroup(tags ApiTags) *RouteGroup {
 }
 
 func (mux *ServeMux) ServeHTTP(writer http.ResponseWriter, req *http.Request) {
-	if Env.OpenLog {
+	if mux.RequestLogger != nil {
 		res := &response{ResponseWriter: writer}
 		writer = res
 		start := time.Now()
 		defer func() {
 			cost := time.Since(start)
-			log.Info.Printf("| %14s | %4d %s \n\n", cost, res.statusCode, GetRequestInfo(req))
+			mux.RequestLogger(req, cost, res.statusCode)
 		}()
 	}
 	vs, act := mux.r.Match(req.Method, req.URL.Path)

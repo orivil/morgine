@@ -46,23 +46,18 @@ type Doc struct {
 }
 
 type parser struct {
-	schemas map[reflect.Type]*param.Schema
-	types   map[reflect.Type]ParamType
+	schemas   map[reflect.Type]*param.Schema
+	types     map[reflect.Type]ParamType
+	marshaler map[reflect.Type]marshaler
 }
 
-func (p *parser) rangeSchema(call func(tp ParamType, schema *param.Schema) (stop bool)) {
-	for key, schema := range p.schemas {
-		tp := p.types[key]
-		if call(tp, schema) {
-			return
-		}
-	}
-}
+type marshaler func(ctx *Context) *multipart.Form
 
 func newParser(ps Params) (par *parser, err error) {
 	par = &parser{
-		schemas: make(map[reflect.Type]*param.Schema, len(ps)),
-		types:   make(map[reflect.Type]ParamType, len(ps)),
+		schemas:   make(map[reflect.Type]*param.Schema, len(ps)),
+		types:     make(map[reflect.Type]ParamType, len(ps)),
+		marshaler: make(map[reflect.Type]marshaler, len(ps)),
 	}
 	for _, p := range ps {
 		schema, ok := p.Schema.(*param.Schema)
@@ -74,6 +69,35 @@ func newParser(ps Params) (par *parser, err error) {
 		}
 		par.schemas[schema.Type] = schema
 		par.types[schema.Type] = p.Type
+		var m marshaler
+		switch p.Type {
+		case Query:
+			m = func(ctx *Context) *multipart.Form {
+				return &multipart.Form{Value: ctx.Query()}
+			}
+		case Path:
+			m = func(ctx *Context) *multipart.Form {
+				return &multipart.Form{Value: ctx.Path()}
+			}
+		case Form:
+			switch schema.EncodeType() {
+			case param.UrlEncodeType:
+				m = func(ctx *Context) *multipart.Form {
+					return &multipart.Form{Value: ctx.Form()}
+				}
+			case param.FormDataEncodeType:
+				m = func(ctx *Context) *multipart.Form {
+					return ctx.MultipartForm()
+				}
+			}
+		case Header:
+			m = func(ctx *Context) *multipart.Form {
+				return &multipart.Form{Value: ctx.Request.Header}
+			}
+		default:
+			return nil, fmt.Errorf("parameter type '%s' is not allowed", p.Type)
+		}
+		par.marshaler[schema.Type] = m
 	}
 	return par, nil
 }
@@ -86,28 +110,7 @@ func (p *parser) unmarshal(vs []interface{}, ctx *Context) (err error) {
 		if schema == nil {
 			return fmt.Errorf("parameter '%s' is not registered", rt)
 		}
-		t := p.types[rt]
-		var fv *multipart.Form
-		switch t {
-		case Query:
-			fv = &multipart.Form{Value: ctx.Query()}
-		case Path:
-			fv = &multipart.Form{Value: ctx.Path()}
-		case Form:
-			switch schema.EncodeType() {
-			case param.UrlEncodeType:
-				fv = &multipart.Form{Value: ctx.Form()}
-			case param.FormDataEncodeType:
-				fv, err = ctx.parseMultipartForm()
-				if err != nil {
-					return err
-				}
-			}
-		case Header:
-			fv = &multipart.Form{Value: ctx.Request.Header}
-		default:
-			return fmt.Errorf("parameter type '%s' is not allowed", t)
-		}
+		fv := p.marshaler[rt](ctx)
 		err = schema.Parse(rv.Pointer(), fv)
 		if err != nil {
 			return err

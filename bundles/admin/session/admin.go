@@ -6,10 +6,11 @@ package accounts
 
 import (
 	"encoding/base64"
-	"errors"
+	"fmt"
 	"github.com/orivil/morgine/bundles/admin/model"
 	"github.com/orivil/morgine/bundles/utils/crypto"
 	"github.com/orivil/morgine/xx"
+	"github.com/pkg/errors"
 	"strconv"
 	"strings"
 	"sync"
@@ -99,24 +100,29 @@ func EncodeBasicAuthorization(username, password string) (auth string, err error
 
 const prefix = "Basic "
 
-func DecodeBasicAuthorization(auth string) (username, password string, err error) {
+func DecodeBasicAuthorization(auth string) (username, password string, expireTime int64, err error) {
 	if !strings.HasPrefix(auth, prefix) {
-		return "", "", ErrBasicAuthorizationFormatIncorrect
+		return "", "", 0, ErrBasicAuthorizationFormatIncorrect
 	}
 	c, err := base64.StdEncoding.DecodeString(auth[len(prefix):])
 	if err != nil {
-		return
+		return "", "", 0, errors.Wrapf(err, "decode authorization token [%s] failed", auth)
 	}
 	auth, err = crypto.DecryptString(string(c))
+	if err != nil {
+		return "", "", 0, errors.Wrapf(err, "decode authorization token [%s] failed", auth)
+	}
 	cs := strings.Split(auth, ":")
 	if len(cs) == 3 {
-		expireTime, _ := strconv.ParseInt(cs[2], 10, 64)
-		if time.Now().Unix()-expireTime >= 0 {
-			return "", "", ErrBasicAuthorizationExpired
+		expireTime, err := strconv.ParseInt(cs[2], 10, 64)
+		if err != nil {
+			return "", "", 0, errors.Wrap(err, "parse token expire time")
+		} else {
+			return cs[0], cs[1], expireTime, nil
 		}
-		return cs[0], cs[1], nil
+	} else {
+		return "", "", 0, errors.Errorf("authorization token [%s] format incorrect", auth)
 	}
-	return "", "", ErrBasicAuthorizeFailed
 }
 
 func DelAdminFromSession(username string) {

@@ -83,7 +83,7 @@ func main() {
 	group = group.Use(xx.Cors, mustLogin)
 	accountController := group.Controller(accountsService)
 	handleLogin("POST", "/login", accountController)
-	xx.Run()
+	xx.Run(":9090")
 }
 
 func handleLogin(method, route string, group *xx.RouteGroup) {
