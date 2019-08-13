@@ -127,4 +127,4 @@ type Handler struct {
 
 type HandleFunc func(ctx *Context)
 
-type Action func(method, route string, rg *RouteGroup)
+type Action func(method, route string, controller *Condition)

@@ -47,9 +47,9 @@ func (mux *ServeMux) ApiDoc() *apiDoc {
 	return mux.apiDoc
 }
 
-func (mux *ServeMux) NewGroup(tags ApiTags) *RouteGroup {
+func (mux *ServeMux) NewGroup(tags ApiTags) *Condition {
 	mux.apiDoc.Tags = append(mux.apiDoc.Tags, tags...)
-	return &RouteGroup{
+	return &Condition{
 		tags:   tags,
 		router: mux.r,
 		apiDoc: mux.apiDoc,

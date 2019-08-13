@@ -84,7 +84,7 @@ func GetUserIDFromContext(ctx *xx.Context) (int, bool) {
 type UserIDProvider func(username, password string) (id int, err error)
 
 func NewLoginHandler(key []byte, expire time.Duration, provider UserIDProvider) xx.Action {
-	return func(method, route string, rg *xx.RouteGroup) {
+	return func(method, route string, ctl *xx.Condition) {
 		type params struct {
 			Username string `required:"用户名不能为空"`
 			Password string `required:"密码不能为空"`
@@ -104,7 +104,7 @@ func NewLoginHandler(key []byte, expire time.Duration, provider UserIDProvider) 
 				},
 			},
 		}
-		rg.Handle(method, route, doc, func(ctx *xx.Context) {
+		ctl.Handle(method, route, doc, func(ctx *xx.Context) {
 			p := &params{}
 			err := ctx.Unmarshal(p)
 			if err != nil {

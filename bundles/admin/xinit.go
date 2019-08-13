@@ -5,38 +5,50 @@
 package admin
 
 import (
-	"github.com/jinzhu/gorm"
+	"github.com/orivil/morgine/bundles/admin/middleware"
 	"github.com/orivil/morgine/bundles/admin/model"
 	"github.com/orivil/morgine/bundles/utils/sql"
 	"github.com/orivil/morgine/cfg"
+	"github.com/orivil/morgine/xx"
+	middleware2 "github.com/orivil/morgine/xx/middleware"
 )
 
-var DB *gorm.DB
+var Bundle bundle
 
-var Register register = 0
+type bundle int
 
-type register int
-
-func (r register) Init(configs cfg.Configs) {
-	env := &sql.Env{}
-	err := configs.Unmarshal(env)
-	if err != nil {
-		panic(err)
+func (b bundle) Init(configs cfg.Configs) {
+	{
+		// 链接数据库
+		env := &sql.Env{}
+		err := configs.Unmarshal(env)
+		if err != nil {
+			panic(err)
+		}
+		model.DB, err = env.Connect("admin_")
+		if err != nil {
+			panic(err)
+		}
 	}
-	DB, err = env.Connect("admin_")
-	if err != nil {
-		panic(err)
+	{
+		// 初始化中间件
+		authKey := configs.GetStr("auth_key")
+		if authKey == "" {
+			panic("auth_key is empty")
+		}
+		middleware.AdminAuth = middleware2.NewJWT([]byte(authKey))
 	}
 }
 
-func (r register) Migrate() {
-	DB.AutoMigrate(&model.Admin{})
+func (b bundle) AddRoute() {
+	var (
+		service
+	)
+	var tags = xx.ApiTags{
+
+	}
 }
 
-func (r register) AddRoute() {
-
-}
-
-func (r register) RunTask() {
-	panic("implement me")
+func (b bundle) Run() {
+	model.DB.AutoMigrate(&model.Admin{})
 }

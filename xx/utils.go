@@ -11,3 +11,7 @@ func MessageResponse(mt MsgType) *Response {
 		Body: msgData(mt, "some message"),
 	}
 }
+
+func MessageData(mt MsgType, msg string) map[string]*Message {
+	return msgData(mt, msg)
+}

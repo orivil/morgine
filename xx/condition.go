@@ -12,13 +12,13 @@ import (
 	"strings"
 )
 
-func NewGroup(tags ApiTags) *RouteGroup {
+func NewGroup(tags ApiTags) *Condition {
 	return DefaultServeMux.NewGroup(tags)
 }
 
 var DefaultTag = NewTagName("defaults")
 
-var DefaultGroup = NewGroup(
+var DefaultCondition = NewGroup(
 	ApiTags{
 		{
 			Name: DefaultTag,
@@ -27,12 +27,11 @@ var DefaultGroup = NewGroup(
 	},
 )
 
-// 设置默认路由组的中间件, 该设置不会影响其他自定义路由组
 func Use(middles ...*Handler) {
-	DefaultGroup = DefaultGroup.Use(middles...)
+	DefaultCondition = DefaultCondition.Use(middles...)
 }
 
-type RouteGroup struct {
+type Condition struct {
 	middles []*Handler
 	tags    ApiTags
 	tagName TagName
@@ -40,8 +39,8 @@ type RouteGroup struct {
 	router  *router.Router
 }
 
-func (g *RouteGroup) copy() *RouteGroup {
-	nc := &RouteGroup{
+func (g *Condition) copy() *Condition {
+	nc := &Condition{
 		router:  g.router,
 		tagName: g.tagName,
 		tags:    g.tags,
@@ -54,8 +53,7 @@ func (g *RouteGroup) copy() *RouteGroup {
 	return nc
 }
 
-// 创建新的子路由组并继承父路由组, 且为子路由组添加中间件, 返回子路由组
-func (g *RouteGroup) Use(middles ...*Handler) *RouteGroup {
+func (g *Condition) Use(middles ...*Handler) *Condition {
 	nc := g.copy()
 	for _, middle := range middles {
 		if middle.Doc == nil {
@@ -74,9 +72,7 @@ func (g *RouteGroup) Use(middles ...*Handler) *RouteGroup {
 	return nc
 }
 
-// 创建新的子路由组并继承父路由组, 且为子路由组命名, 返回子路由组.
-// 子路由组的 name 标签必须是祖先路由组的叶子节点.
-func (g *RouteGroup) Controller(name TagName) *RouteGroup {
+func (g *Condition) Controller(name TagName) *Condition {
 	if !g.tags.checkIsSubTag(name) {
 		panic("need the sub of the initialized tags")
 	}
@@ -88,7 +84,7 @@ func (g *RouteGroup) Controller(name TagName) *RouteGroup {
 	return nc
 }
 
-func (g *RouteGroup) Handle(method, route string, doc *Doc, handleFunc HandleFunc) {
+func (g *Condition) Handle(method, route string, doc *Doc, handleFunc HandleFunc) {
 	g.handle(1, method, route, doc, handleFunc)
 }
 
@@ -103,7 +99,7 @@ func (p *ParameterError) Error() string {
 	return fmt.Sprintf("parameter %s is illegal: ContentType [%s], Location [%s], Method [%s]", p.Name, p.ContentType, p.Type, p.Method)
 }
 
-func (g *RouteGroup) handle(depth int, method, route string, doc *Doc, handleFunc HandleFunc) {
+func (g *Condition) handle(depth int, method, route string, doc *Doc, handleFunc HandleFunc) {
 	method = strings.ToUpper(method)
 	if doc == nil {
 		doc = &Doc{}
@@ -155,5 +151,5 @@ func (g *RouteGroup) handle(depth int, method, route string, doc *Doc, handleFun
 }
 
 func Handle(method, route string, doc *Doc, handleFunc HandleFunc) {
-	DefaultGroup.handle(1, method, route, doc, handleFunc)
+	DefaultCondition.handle(1, method, route, doc, handleFunc)
 }

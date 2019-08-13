@@ -197,7 +197,7 @@ func (c *Context) Message(t MsgType, msg string) error {
 	return c.message(t, msg)
 }
 
-// 获得 message 数据, 用于生成文档数据
+// 获得 message 数据
 func msgData(t MsgType, msg string) map[string]*Message {
 	return map[string]*Message{"message": {Type: t, Content: msg}}
 }
