@@ -10,10 +10,38 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jinzhu/gorm"
 	_ "github.com/lib/pq"
-	"github.com/orivil/morgine/cfg"
 	"github.com/orivil/morgine/log"
 	"github.com/orivil/morgine/xx"
 )
+
+//var prefix = make(map[string]string, 5)
+//
+//func init() {
+//	gorm.DefaultTableNameHandler = func(db *gorm.DB, defaultTableName string) string {
+//		if v, ok := db.Get("name"); ok {
+//			name := v.(string)
+//			return prefix[name] + defaultTableName
+//		}
+//		return defaultTableName
+//	}
+//}
+//
+//func InitConfig(fileName string, call func(db *gorm.DB)) error {
+//	env := &Env{}
+//	err := cfg.Unmarshal(fileName, defaultConfig, env)
+//	if err != nil {
+//		return err
+//	}
+//	db, err := env.Connect()
+//	if err != nil {
+//		return err
+//	} else {
+//		db = db.Set("name", fileName)
+//		prefix[fileName] = env.DBSqlTablePrefix
+//		call(db)
+//	}
+//	return nil
+//}
 
 var defaultConfig = `# 开启日志
 db_log: true
@@ -46,34 +74,6 @@ db_max_idle_connects: 5
 db_max_opened_connects: 10
 
 `
-var prefix = make(map[string]string, 5)
-
-func init() {
-	gorm.DefaultTableNameHandler = func(db *gorm.DB, defaultTableName string) string {
-		if v, ok := db.Get("name"); ok {
-			name := v.(string)
-			return prefix[name] + defaultTableName
-		}
-		return defaultTableName
-	}
-}
-
-func InitConfig(fileName string, call func(db *gorm.DB)) error {
-	env := &Env{}
-	err := cfg.Unmarshal(fileName, defaultConfig, env)
-	if err != nil {
-		return err
-	}
-	db, err := env.Connect()
-	if err != nil {
-		return err
-	} else {
-		db = db.Set("name", fileName)
-		prefix[fileName] = env.DBSqlTablePrefix
-		call(db)
-	}
-	return nil
-}
 
 type Env struct {
 	DBLog               bool   `yaml:"db_log"`
@@ -88,8 +88,7 @@ type Env struct {
 	DBMaxOpenedConnects int    `yaml:"db_max_opened_connects"`
 }
 
-func (e *Env) Connect() (*gorm.DB, error) {
-
+func (e *Env) Connect(uniquePrefix string) (*gorm.DB, error) {
 	var arg string
 	switch e.DBDialect {
 	case "", "mysql":
@@ -110,7 +109,15 @@ func (e *Env) Connect() (*gorm.DB, error) {
 	if err = db.DB().Ping(); err != nil {
 		return nil, err
 	}
-
+	if e.DBSqlTablePrefix != "" || uniquePrefix != "" {
+		db.Set("uniquePrefix", uniquePrefix)
+		gorm.DefaultTableNameHandler = func(db *gorm.DB, defaultTableName string) string {
+			if un, ok := db.Get("uniquePrefix"); ok {
+				return un.(string) + e.DBSqlTablePrefix + defaultTableName
+			}
+			return e.DBSqlTablePrefix + defaultTableName
+		}
+	}
 	// 注册关闭事件
 	xx.AfterShutdown(func() {
 		log.Init.Printf("关闭数据库[%s]连接...\n", e.DBName)

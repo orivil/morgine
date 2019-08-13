@@ -5,3 +5,9 @@
 package xx
 
 type MAP map[string]interface{}
+
+func MessageResponse(mt MsgType) *Response {
+	return &Response{
+		Body: msgData(mt, "some message"),
+	}
+}

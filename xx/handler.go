@@ -28,7 +28,7 @@ type Param struct {
 
 type Params []*Param
 
-type Responses []Response
+type Responses []*Response
 
 type Response struct {
 	Code        int
@@ -126,3 +126,5 @@ type Handler struct {
 }
 
 type HandleFunc func(ctx *Context)
+
+type Action func(method, route string, rg *RouteGroup)

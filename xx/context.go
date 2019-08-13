@@ -198,8 +198,8 @@ func (c *Context) Message(t MsgType, msg string) error {
 }
 
 // 获得 message 数据, 用于生成文档数据
-func MsgData(t MsgType, msg string) MAP {
-	return MAP{"message": &Message{Type: t, Content: msg}}
+func msgData(t MsgType, msg string) map[string]*Message {
+	return map[string]*Message{"message": {Type: t, Content: msg}}
 }
 
 // 发送 info 类型的消息, 不管是否出现错误都会调用 Abort 方法
@@ -223,7 +223,7 @@ func (c *Context) MsgWarning(msg string) error {
 }
 
 func (c *Context) message(t MsgType, msg string) error {
-	return c.sendData(MessageDataType, MsgData(t, msg))
+	return c.sendData(MessageDataType, msgData(t, msg))
 }
 
 // 验证参数并将参数解析到 v 中, v 必须经过注册

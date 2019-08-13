@@ -5,28 +5,38 @@
 package admin
 
 import (
-	"github.com/orivil/morgine/bundles/admin/db"
+	"github.com/jinzhu/gorm"
 	"github.com/orivil/morgine/bundles/admin/model"
+	"github.com/orivil/morgine/bundles/utils/sql"
+	"github.com/orivil/morgine/cfg"
 )
 
-type Register int
+var DB *gorm.DB
 
-func (r Register) InitConfig() {
+var Register register = 0
+
+type register int
+
+func (r register) Init(configs cfg.Configs) {
+	env := &sql.Env{}
+	err := configs.Unmarshal(env)
+	if err != nil {
+		panic(err)
+	}
+	DB, err = env.Connect("admin_")
+	if err != nil {
+		panic(err)
+	}
+}
+
+func (r register) Migrate() {
+	DB.AutoMigrate(&model.Admin{})
+}
+
+func (r register) AddRoute() {
 
 }
 
-func (r Register) InitDB() {
-	db.InitDB()
-}
-
-func (r Register) MigrateDB() {
-	db.GORM.AutoMigrate(&model.Admin{})
-}
-
-func (r Register) InitRoute() {
-
-}
-
-func (r Register) RunTask() {
-
+func (r register) RunTask() {
+	panic("implement me")
 }

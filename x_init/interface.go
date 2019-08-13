@@ -4,26 +4,24 @@
 
 package x_init
 
+import "github.com/orivil/morgine/cfg"
+
 type Interface interface {
-	InitConfig()
-	InitDB()
-	MigrateDB()
-	InitRoute()
+	Init(configs cfg.Configs)
+	Migrate()
+	AddRoute()
 	RunTask()
 }
 
-func XInit(i ...Interface) {
+func XInit(configs cfg.Configs, i ...Interface) {
 	for _, it := range i {
-		it.InitConfig()
+		it.Init(configs)
 	}
 	for _, it := range i {
-		it.InitDB()
+		it.Migrate()
 	}
 	for _, it := range i {
-		it.MigrateDB()
-	}
-	for _, it := range i {
-		it.InitRoute()
+		it.AddRoute()
 	}
 	for _, it := range i {
 		it.RunTask()
