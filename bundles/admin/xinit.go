@@ -5,12 +5,9 @@
 package admin
 
 import (
-	"github.com/orivil/morgine/bundles/admin/middleware"
 	"github.com/orivil/morgine/bundles/admin/model"
 	"github.com/orivil/morgine/bundles/utils/sql"
 	"github.com/orivil/morgine/cfg"
-	"github.com/orivil/morgine/xx"
-	middleware2 "github.com/orivil/morgine/xx/middleware"
 )
 
 var Bundle bundle
@@ -25,30 +22,29 @@ func (b bundle) Init(configs cfg.Configs) {
 		if err != nil {
 			panic(err)
 		}
-		model.DB, err = env.Connect("admin_")
+		admin_model.DB, err = env.Connect("admin_")
 		if err != nil {
 			panic(err)
 		}
 	}
 	{
-		// 初始化中间件
-		authKey := configs.GetStr("auth_key")
-		if authKey == "" {
-			panic("auth_key is empty")
+		// 初始化 middleware 及 action
+		env := &Env{}
+		err := configs.Unmarshal(env)
+		if err != nil {
+			panic(err)
 		}
-		middleware.AdminAuth = middleware2.NewJWT([]byte(authKey))
+		err = env.Init()
+		if err != nil {
+			panic(err)
+		}
 	}
 }
 
 func (b bundle) AddRoute() {
-	var (
-		service
-	)
-	var tags = xx.ApiTags{
-
-	}
+	registerRoutes()
 }
 
 func (b bundle) Run() {
-	model.DB.AutoMigrate(&model.Admin{})
+	admin_model.DB.AutoMigrate(&admin_model.Account{})
 }

@@ -2,12 +2,12 @@
 // Use of this source code is governed by a MIT-style
 // license that can be found at https://mit-license.org.
 
-package model
+package admin_model
 
 import (
 	"errors"
 	"github.com/jinzhu/gorm"
-	"github.com/orivil/morgine/bundles/admin/db"
+	"github.com/orivil/morgine/bundles/utils/sql"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -15,18 +15,19 @@ var (
 	ErrUsernameRegistered = errors.New("该用户名已注册")
 	ErrUserNotRegistered  = errors.New("用户不存在")
 	ErrPasswordIncorrect  = errors.New("密码错误")
-	ErrUsernameIncorrect  = errors.New("用户名错误")
+	ErrUsernameIncorrect  = errors.New("用户名不存在")
 )
 
-type Admin struct {
+type Account struct {
 	ID       int
+	Super sql.Boolean
 	Username string `gorm:"index"`
 	Password string
 }
 
-func CreateAdmin(username, password string) error {
-	var a = &Admin{}
-	db.GORM.Model(a).Where("username=?", a.Username).Select("id").First(a)
+func CreateAdmin(username, password string, super bool) error {
+	var a = &Account{}
+	DB.Model(a).Where("username=?", a.Username).Select("id").First(a)
 	if a.ID > 0 {
 		return ErrUsernameRegistered
 	}
@@ -34,15 +35,16 @@ func CreateAdmin(username, password string) error {
 	if err != nil {
 		return err
 	}
-	return db.GORM.Create(&Admin{
+	return DB.Create(&Account{
 		Username: username,
 		Password: password,
+		Super: sql.GetSqlBoolean(super),
 	}).Error
 }
 
 func UpdatePassword(username, oldPassword, newPassword string) error {
-	var exist = &Admin{}
-	db.GORM.Model(exist).Where("username=?", username).First(exist)
+	var exist = &Account{}
+	DB.Model(exist).Where("username=?", username).First(exist)
 	if exist.ID == 0 {
 		return ErrUserNotRegistered
 	}
@@ -58,7 +60,7 @@ func UpdatePassword(username, oldPassword, newPassword string) error {
 	if err != nil {
 		return err
 	}
-	return db.GORM.Model(exist).Where("username=?", username).UpdateColumn("password", newPassword).Error
+	return DB.Model(exist).Where("username=?", username).UpdateColumn("password", newPassword).Error
 }
 
 func hashPassword(password string) (string, error) {
@@ -70,30 +72,30 @@ func hashPassword(password string) (string, error) {
 	}
 }
 
-func SignIn(username, password string) (a *Admin, err error) {
-	exist := &Admin{}
-	err = db.GORM.Where("username=?", username).First(exist).Error
+func SignIn(username, password string) (id int, err error) {
+	exist := &Account{}
+	err = DB.Where("username=?", username).Select("id").First(exist).Error
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
-			return nil, ErrUsernameIncorrect
+			return 0, ErrUsernameIncorrect
 		} else {
-			return nil, err
+			return 0, err
 		}
 	}
 	err = bcrypt.CompareHashAndPassword([]byte(exist.Password), []byte(password))
 	if err != nil {
 		if err == bcrypt.ErrMismatchedHashAndPassword {
-			return nil, ErrPasswordIncorrect
+			return 0, ErrPasswordIncorrect
 		} else {
-			return nil, err
+			return 0, err
 		}
 	}
-	return exist, nil
+	return exist.ID, nil
 }
 
-func GetAdmin(id int) (*Admin, error) {
-	admin := &Admin{}
-	err := db.GORM.Where("id=?", id).First(admin).Error
+func GetAdmin(id int) (*Account, error) {
+	admin := &Account{}
+	err := DB.Where("id=?", id).First(admin).Error
 	if err != nil {
 		return nil, err
 	} else {

@@ -4,7 +4,10 @@
 
 package admin
 
-import "github.com/orivil/morgine/xx"
+import (
+	"github.com/orivil/morgine/bundles/admin/actions"
+	"github.com/orivil/morgine/xx"
+)
 
 var adminService = xx.NewTagName("管理员服务")
 
@@ -16,10 +19,9 @@ var tags = xx.ApiTags{
 
 func registerRoutes() {
 	group := xx.NewGroup(tags)
-	adminController := group.Controller(adminService)
-
+	handleAdmin(group.Controller(adminService))
 }
 
-func handleLogin(method, route string, ctr *xx.Condition) {
-
+func handleAdmin(g *xx.Condition)  {
+	actions.Login("GET", "/login", g)
 }
