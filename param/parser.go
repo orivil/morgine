@@ -22,14 +22,7 @@ const DefaultTimeLayout = "2006-01-02T15:04:05"
 // 时间模板标签名, 设置此标签之后时间按此标签模板解析
 const TimeLayoutTag = "time-layout"
 
-type FieldError struct {
-	Field string
-	Err   string
-}
-
-func (fe *FieldError) Error() string {
-	return fmt.Sprintf("field [%s]: %s", fe.Field, fe.Err)
-}
+var ErrFileHandlerIsNil = errors.New("file handler is nil")
 
 type EncodeType string
 
@@ -233,7 +226,7 @@ func fieldDefaultValue(layout string, kind Kind, ptr, offset uintptr) interface{
 			return handler
 		}
 		var f FileHandler = func(field string, header *multipart.FileHeader) error {
-			return &FieldError{Field: field, Err: "file handler is nil"}
+			return ErrFileHandlerIsNil
 		}
 		return f
 	case TimePtr:

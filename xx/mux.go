@@ -26,7 +26,7 @@ type ServeMux struct {
 }
 
 func NewServeMux(r *router.Router) *ServeMux {
-	return &ServeMux{
+	return &ServeMux {
 		r:               r,
 		NotFoundHandler: http.NotFound,
 		ErrHandler:      http.Error,
@@ -37,7 +37,7 @@ func NewServeMux(r *router.Router) *ServeMux {
 	}
 }
 
-var contextPool = sync.Pool{
+var contextPool = sync.Pool {
 	New: func() interface{} {
 		return &Context{}
 	},

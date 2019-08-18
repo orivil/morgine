@@ -80,13 +80,13 @@ func main() {
 		}
 	})
 	group := xx.NewGroup(tags)
-	group = group.Use(xx.Cors, mustLogin)
+	group = group.Use(mustLogin)
 	accountController := group.Controller(accountsService)
 	handleLogin("POST", "/login", accountController)
 	xx.Run(":9090")
 }
 
-func handleLogin(method, route string, group *xx.RouteGroup) {
+func handleLogin(method, route string, group *xx.Condition) {
 	type pm struct {
 		Username     string `required:""`
 		Password     string `desc:"密码"`
@@ -142,8 +142,8 @@ func handleLogin(method, route string, group *xx.RouteGroup) {
 }
 
 var mustLogin = func() *xx.Handler {
-	type authorization struct {
-		Authorization string
+	type params struct {
+		Authorization string `required:"用户未登录"`
 	}
 	return &xx.Handler{
 		Doc: &xx.Doc{
@@ -152,19 +152,22 @@ var mustLogin = func() *xx.Handler {
 			Params: xx.Params{
 				{
 					Type:   xx.Header,
-					Schema: &authorization{},
+					Schema: &params{},
 				},
 			},
-			Responses: xx.Responses{{
-				//Code: http.StatusForbidden,
-				Body: xx.MsgData(xx.MsgTypeWarning, "需要管理员权限"),
-			}},
+			Responses: xx.Responses{
+				xx.MessageResponse(xx.MsgTypeWarning),
+			},
 		},
 		HandleFunc: func(ctx *xx.Context) {
-			p := &authorization{}
-			ctx.Unmarshal(p)
-			if p.Authorization == "" {
-				ctx.MsgWarning("需要管理员权限")
+			p := &params{}
+			err := ctx.Unmarshal(p)
+			if err != nil {
+				xx.HandleUnmarshalError(err, ctx)
+			} else {
+				if p.Authorization == "" {
+					ctx.MsgWarning("需要管理员权限")
+				}
 			}
 		},
 	}

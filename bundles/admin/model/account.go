@@ -7,7 +7,6 @@ package admin_model
 import (
 	"errors"
 	"github.com/jinzhu/gorm"
-	"github.com/orivil/morgine/bundles/utils/sql"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -20,12 +19,16 @@ var (
 
 type Account struct {
 	ID       int
-	Super sql.Boolean
-	Username string `gorm:"index"`
+	Username string `gorm:"unique_index"`
 	Password string
 }
 
-func CreateAdmin(username, password string, super bool) error {
+func CountAdmins() (total int, err error) {
+	err = DB.Model(&Account{}).Count(&total).Error
+	return
+}
+
+func CreateAdmin(username, password string) error {
 	var a = &Account{}
 	DB.Model(a).Where("username=?", a.Username).Select("id").First(a)
 	if a.ID > 0 {
@@ -38,13 +41,12 @@ func CreateAdmin(username, password string, super bool) error {
 	return DB.Create(&Account{
 		Username: username,
 		Password: password,
-		Super: sql.GetSqlBoolean(super),
 	}).Error
 }
 
-func UpdatePassword(username, oldPassword, newPassword string) error {
+func UpdatePassword(loginID int, username, oldPassword, newPassword string) error {
 	var exist = &Account{}
-	DB.Model(exist).Where("username=?", username).First(exist)
+	DB.Model(exist).Where("id=? AND username=?", loginID, username).First(exist)
 	if exist.ID == 0 {
 		return ErrUserNotRegistered
 	}
@@ -74,7 +76,7 @@ func hashPassword(password string) (string, error) {
 
 func SignIn(username, password string) (id int, err error) {
 	exist := &Account{}
-	err = DB.Where("username=?", username).Select("id").First(exist).Error
+	err = DB.Where("username=?", username).First(exist).Error
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return 0, ErrUsernameIncorrect

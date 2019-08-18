@@ -6,6 +6,7 @@ package admin
 
 import (
 	"github.com/orivil/morgine/bundles/admin/actions"
+	admin_middleware "github.com/orivil/morgine/bundles/admin/middleware"
 	"github.com/orivil/morgine/xx"
 )
 
@@ -18,10 +19,12 @@ var tags = xx.ApiTags{
 }
 
 func registerRoutes() {
-	group := xx.NewGroup(tags)
+	group := xx.NewGroup(tags).Use(xx.Cors)
 	handleAdmin(group.Controller(adminService))
 }
 
 func handleAdmin(g *xx.Condition)  {
-	actions.Login("GET", "/login", g)
+	auth := g.Use(admin_middleware.Auth)
+	actions.Login("POST", "/login", g)
+	actions.ChangePassword("PUT", "/password", auth)
 }

@@ -8,13 +8,17 @@ import (
 	"fmt"
 )
 
-var passwd = "wen123456"
+type A struct {
+	*B
+}
+
+type B struct {
+	Name string
+}
 
 func main() {
-	var s = []string{"null"}
-	fmt.Println(len(s))
-	if len(s) == 1 && s[0] == "" || s[0] == "null" {
-		fmt.Println(true)
+	var a interface{} = &A{B: &B{Name: "bbb"}}
+	if b, ok := a.(*B); ok {
+		fmt.Println(b.Name)
 	}
-	fmt.Println(s)
 }

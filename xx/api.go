@@ -13,6 +13,8 @@ import (
 	"unsafe"
 )
 
+var ApiDoc = newApiDoc()
+
 type apiDoc struct {
 	Tags    ApiTags
 	Middles map[uintptr]*apiMiddle
@@ -25,8 +27,7 @@ func newApiDoc() *apiDoc {
 		Actions: map[uintptr][]*apiAction{},
 	}
 }
-
-func (doc *apiDoc) use(middles ...*Handler) {
+func (doc *apiDoc) add(depth int, tag TagName, method, route string, d *Doc, middles []*Handler) {
 	for _, middle := range middles {
 		ptr := uintptr(unsafe.Pointer(middle))
 		if _, ok := doc.Middles[ptr]; !ok {
@@ -38,9 +39,6 @@ func (doc *apiDoc) use(middles ...*Handler) {
 			}
 		}
 	}
-}
-
-func (doc *apiDoc) handle(depth int, tag TagName, method, route string, d *Doc, middles []*Handler) {
 	act := &apiAction{
 		Name:        d.Title,
 		Desc:        d.Desc,

@@ -12,23 +12,40 @@ import (
 	"strings"
 )
 
+var globalMiddles []*Handler
+
 func NewGroup(tags ApiTags) *Condition {
 	return DefaultServeMux.NewGroup(tags)
 }
 
 var DefaultTag = NewTagName("defaults")
 
-var DefaultCondition = NewGroup(
+var DefaultGroup = NewGroup(
 	ApiTags{
 		{
 			Name: DefaultTag,
-			Desc: "默认路由",
 		},
 	},
-)
+).Controller(DefaultTag)
 
 func Use(middles ...*Handler) {
-	DefaultCondition = DefaultCondition.Use(middles...)
+	initParser(middles...)
+	globalMiddles = append(globalMiddles, middles...)
+}
+
+func initParser(hs ...*Handler) {
+	for _, h := range hs {
+		if h.Doc == nil {
+			h.Doc = &Doc{}
+		}
+		if h.Doc.parser == nil {
+			var err error
+			h.Doc.parser, err = newParser(h.Doc.Params)
+			if err != nil {
+				panic(err)
+			}
+		}
+	}
 }
 
 type Condition struct {
@@ -55,20 +72,10 @@ func (g *Condition) copy() *Condition {
 
 func (g *Condition) Use(middles ...*Handler) *Condition {
 	nc := g.copy()
-	for _, middle := range middles {
-		if middle.Doc == nil {
-			middle.Doc = &Doc{}
-		}
-		if middle.Doc.parser == nil {
-			var err error
-			middle.Doc.parser, err = newParser(middle.Doc.Params)
-			if err != nil {
-				panic(err)
-			}
-		}
+	if len(middles) > 0 {
+		initParser(middles...)
+		nc.middles = append(nc.middles, middles...)
 	}
-	nc.middles = append(nc.middles, middles...)
-	nc.apiDoc.use(middles...)
 	return nc
 }
 
@@ -91,12 +98,12 @@ func (g *Condition) Handle(method, route string, doc *Doc, handleFunc HandleFunc
 type ParameterError struct {
 	Name        string
 	ContentType param.EncodeType
-	Type        ParamType
+	ParamType   ParamType
 	Method      string
 }
 
 func (p *ParameterError) Error() string {
-	return fmt.Sprintf("parameter %s is illegal: ContentType [%s], Location [%s], Method [%s]", p.Name, p.ContentType, p.Type, p.Method)
+	return fmt.Sprintf("parameter %s is illegal: ContentType [%s], ParamType [%s], Method [%s]", p.Name, p.ContentType, p.ParamType, p.Method)
 }
 
 func (g *Condition) handle(depth int, method, route string, doc *Doc, handleFunc HandleFunc) {
@@ -104,52 +111,51 @@ func (g *Condition) handle(depth int, method, route string, doc *Doc, handleFunc
 	if doc == nil {
 		doc = &Doc{}
 	}
-	var err error
-	doc.parser, err = newParser(doc.Params)
-	if err != nil {
-		panic(err)
-	}
-	for name, schema := range doc.parser.schemas {
-		switch ct := schema.EncodeType(); ct {
-		case param.FormDataEncodeType:
-			typ := doc.parser.types[name]
-			switch typ {
-			case Form:
-			default:
-				panic(&ParameterError{
-					Name:        name.String(),
-					ContentType: ct,
-					Type:        typ,
-					Method:      method,
-				})
-			}
-			switch method {
-			case http.MethodPost, http.MethodPut:
-			default:
-				panic(&ParameterError{
-					Name:        name.String(),
-					ContentType: ct,
-					Type:        typ,
-					Method:      method,
-				})
-			}
-		}
-	}
 	if g.tagName == nil {
-		g.tagName = DefaultTag
+		panic("controller name is nil")
 	}
-	handler := &Handler{
+	middles := append(globalMiddles, g.middles...)
+	handler := &Handler {
 		Doc:        doc,
-		middles:    g.middles,
+		middles:    middles,
 		HandleFunc: handleFunc,
 	}
-	err = g.router.Add(method, route, handler)
+	initParser(handler)
+	mustCheckParams(doc.parser, method)
+	err := g.router.Add(method, route, handler)
 	if err != nil {
 		panic(err)
 	}
-	g.apiDoc.handle(depth+1, g.tagName, method, route, doc, g.middles)
+	g.apiDoc.add(depth+1, g.tagName, method, route, doc, middles)
 }
 
 func Handle(method, route string, doc *Doc, handleFunc HandleFunc) {
-	DefaultCondition.handle(1, method, route, doc, handleFunc)
+	DefaultGroup.handle(1, method, route, doc, handleFunc)
+}
+
+func mustCheckParams(pr *parser, method string) {
+	for name, schema := range pr.schemas {
+		typ := pr.types[name]
+		ct := schema.EncodeType()
+		err := &ParameterError{
+			Name:        name.String(),
+			ContentType: ct,
+			ParamType:   typ,
+			Method:      method,
+		}
+		switch ct {
+		case param.FormDataEncodeType:
+			if typ != Form {
+				panic(err)
+			}
+		}
+		switch typ {
+		case Form:
+			switch method {
+			case http.MethodPost, http.MethodPut, http.MethodPatch:
+			default:
+				panic(err)
+			}
+		}
+	}
 }
