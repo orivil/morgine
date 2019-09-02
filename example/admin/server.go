@@ -5,7 +5,10 @@
 package main
 
 import (
+	"fmt"
 	"github.com/orivil/morgine/bundles/admin"
+	admin_model "github.com/orivil/morgine/bundles/admin/model"
+	"github.com/orivil/morgine/bundles/utils/api"
 	"github.com/orivil/morgine/cfg"
 	"github.com/orivil/morgine/x_init"
 	"github.com/orivil/morgine/xx"
@@ -18,6 +21,9 @@ auth_key: "change this pass"
 
 # 授权过期时间/小时
 auth_expire_hour: 168
+
+# casbin 权限模型文件
+auth_model_file: "configs/rbac_model.conf"
 
 # 开启日志
 db_log: true
@@ -63,11 +69,20 @@ func main() {
 	xx.Handle("GET", "/api-data", &xx.Doc{
 		Title: "API DATA",
 	}, func(ctx *xx.Context) {
-		err := ctx.SendJSON(xx.MAP{"doc": xx.DefaultServeMux.ApiDoc()})
+		err := ctx.SendJSON(xx.MAP{
+			"doc": xx.DefaultServeMux.ApiDoc(),
+			"models": api.Models,
+		})
 		if err != nil {
 			ctx.Error(err)
 		}
 	})
 	x_init.Register(configs, admin.Bundle)
+
+	as, err := admin_model.GetRoleAdmins(1, 10, 0)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(len(as))
 	xx.Run(configs.GetStr("http_addr"))
 }

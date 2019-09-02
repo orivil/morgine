@@ -31,7 +31,7 @@ func (doc *apiDoc) add(depth int, tag TagName, method, route string, d *Doc, mid
 	for _, middle := range middles {
 		ptr := uintptr(unsafe.Pointer(middle))
 		if _, ok := doc.Middles[ptr]; !ok {
-			doc.Middles[ptr] = &apiMiddle{
+			doc.Middles[ptr] = &apiMiddle {
 				Name:      middle.Doc.Title,
 				Desc:      middle.Doc.Desc,
 				Params:    initApiParams(middle.Doc.parser),
@@ -39,7 +39,7 @@ func (doc *apiDoc) add(depth int, tag TagName, method, route string, d *Doc, mid
 			}
 		}
 	}
-	act := &apiAction{
+	act := &apiAction {
 		Name:        d.Title,
 		Desc:        d.Desc,
 		Trace:       initTrace(depth + 1),
@@ -111,15 +111,15 @@ func initApiParams(p *parser) apiParams {
 }
 
 type apiAction struct {
-	Name        string
-	Desc        string
-	Trace       string
-	Method      string
-	Route       string
-	Middles     []uintptr
-	Params      []*apiParam
-	ContentType param.EncodeType
-	Responses   Responses
+	Name        string           // 名称
+	Desc        string           // 描述
+	Trace       string           // 注册地址(runtime file:line)
+	Method      string           // 请求方法
+	Route       string           // 请求路由
+	Middles     []uintptr        // 中间件
+	Params      []*apiParam      // 参数
+	ContentType param.EncodeType // 参数编码类型
+	Responses   Responses        // 响应列表
 }
 
 type TagName *string

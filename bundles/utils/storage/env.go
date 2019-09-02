@@ -6,30 +6,13 @@ package storage
 
 import (
 	"github.com/aliyun/aliyun-oss-go-sdk/oss"
-	"github.com/orivil/morgine/cfg"
 	"github.com/pkg/errors"
+	"net/http"
 	"strings"
 )
 
-var Env = &environment{LocalServeHost: "localhost"}
-
-type environment struct {
-	UseOSS             string `yaml:"use_oss"`
-	LocalServeHost     string `yaml:"local_serve_host"`
-	OSSEndpoint        string `yaml:"oss_endpoint"`
-	OSSAccessKeyID     string `yaml:"oss_access_key_id"`
-	OSSAccessKeySecret string `yaml:"oss_access_key_secret"`
-}
-
-func (e *environment) UseALiYunOSS() bool {
-	return e.UseOSS == "yes" || e.UseOSS == "true"
-}
-
-func (e *environment) ServeHost(bucketName string) string {
-	return bucketName + "." + strings.TrimPrefix(e.OSSEndpoint, "http://")
-}
-
-var defaultConfig = `# yes 使用 OSS 存储, no 则使用本地硬盘存储
+var env =
+`# yes 使用 OSS 存储, no 则使用本地硬盘存储
 use_oss: "no"
 
 # 本地服务域名
@@ -45,39 +28,62 @@ oss_access_key_id: "<yourAccessKeyId>"
 oss_access_key_secret: "<yourAccessKeySecret>"
 `
 
-var client *oss.Client
+type Env struct {
+	UseOSS             string `yaml:"use_oss"`
+	LocalServeHost     string `yaml:"local_serve_host"`
+	OSSEndpoint        string `yaml:"oss_endpoint"`
+	OSSAccessKeyID     string `yaml:"oss_access_key_id"`
+	OSSAccessKeySecret string `yaml:"oss_access_key_secret"`
+	client *oss.Client
+	Storage
+}
 
-func init() {
-	err := cfg.Unmarshal("storage.yml", defaultConfig, Env)
+func (e *Env) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	err := unmarshal(e)
 	if err != nil {
-		panic(err)
-	}
-	if Env.UseALiYunOSS() {
-		client, err = oss.New(Env.OSSEndpoint, Env.OSSAccessKeyID, Env.OSSAccessKeySecret)
-		if err != nil {
-			panic(err)
+		return err
+	} else {
+		if e.UseALiYunOSS() {
+			e.client, err = oss.New(e.OSSEndpoint, e.OSSAccessKeyID, e.OSSAccessKeySecret)
+			if err != nil {
+				return err
+			}
 		}
 	}
+	return nil
+}
+
+func (e *Env) InitLocalStorage(dir string, corsHandler func(header http.Header)) (*LocalStorage, error) {
+	return NewLocalStorage(dir, e.LocalServeHost, corsHandler)
+}
+
+func (e *Env) InitOssStorage(bucketName, cdnHost string, urlMaxAge int64, corsRules []oss.CORSRule) (*OssStorage, error) {
+	return NewOssStorage(bucketName, corsRules, urlMaxAge, cdnHost, e.OssServeHost(bucketName))
+}
+
+func (e *Env) UseALiYunOSS() bool {
+	return e.UseOSS == "yes" || e.UseOSS == "true"
+}
+
+func (e *Env) OssServeHost(bucketName string) string {
+	return bucketName + "." + strings.TrimPrefix(e.OSSEndpoint, "http://")
 }
 
 // get bucket or create a new one with cross site rules
-func Bucket(name string, corsRules []oss.CORSRule) (b *oss.Bucket, err error) {
-	if client == nil {
-		return nil, errors.Errorf("未开启 OSS 服务, 需要在配置文件中或环境变量中设置开启")
-	}
-	ok, err := client.IsBucketExist(name)
+func (e *Env) Bucket(name string, corsRules []oss.CORSRule) (b *oss.Bucket, err error) {
+	ok, err := e.client.IsBucketExist(name)
 	if err != nil {
 		return nil, errors.Wrapf(err, "检查 bucket [%s] 是否存在时出错", name)
 	}
 	if !ok {
-		err = client.CreateBucket(name)
+		err = e.client.CreateBucket(name)
 		if err != nil {
 			return nil, errors.Wrapf(err, "创建 bucket [%s] 时出错", name)
 		}
-		err = client.SetBucketCORS(name, corsRules)
+		err = e.client.SetBucketCORS(name, corsRules)
 		if err != nil {
 			return nil, err
 		}
 	}
-	return client.Bucket(name)
+	return e.client.Bucket(name)
 }

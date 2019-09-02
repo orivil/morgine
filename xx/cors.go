@@ -50,7 +50,7 @@ func ExposeCrossSiteHeaders(header http.Header, headers []string) {
 }
 
 // 默认允许跨域请求的 header 头
-var DefaultCorsHeaders = []string{"Content-Type"}
+var DefaultCorsHeaders = []string{"Content-Type", "Authorization"}
 
 // 默认允许跨域响应的 header 头
 var DefaultExposeHeaders = []string{"Middleware"}

@@ -9,7 +9,7 @@ import (
 	"strconv"
 )
 
-// 时间队列存储器
+// 队列存储器
 type QueueStorage struct {
 	client *redis.Client
 }
@@ -30,7 +30,7 @@ func (rs *QueueStorage) Del(key string, members ...string) error {
 
 // 添加或修改队列成员
 func (rs *QueueStorage) Set(key, member string, activeAt int64) error {
-	return rs.client.ZAdd(key, redis.Z{
+	return rs.client.ZAdd(key, &redis.Z{
 		Score:  float64(activeAt),
 		Member: member,
 	}).Err()
@@ -51,7 +51,7 @@ func (rs *QueueStorage) Range(expireAt, limit int64, walk QueueWalker) (err erro
 		}
 		if len(keys) > 0 {
 			for _, key := range keys {
-				var rangeBy = redis.ZRangeBy{
+				var rangeBy = &redis.ZRangeBy{
 					Min:    "0",
 					Max:    strconv.FormatInt(expireAt, 10),
 					Offset: 0,

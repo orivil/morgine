@@ -6,7 +6,6 @@ package morgine_redis
 
 import (
 	"github.com/go-redis/redis"
-	"github.com/orivil/morgine/cfg"
 )
 
 var defaultConfig = `# 数据库地址
@@ -32,18 +31,4 @@ func (e *Env) Connect(db int) (client *redis.Client, err error) {
 		return nil, err
 	}
 	return client, nil
-}
-
-func InitConfig(fileName string, db int, call func(client *redis.Client)) {
-	env := &Env{}
-	err := cfg.Unmarshal(fileName, defaultConfig, env)
-	if err != nil {
-		panic(err)
-	}
-	client, err := env.Connect(db)
-	if err != nil {
-		panic(err)
-	} else {
-		call(client)
-	}
 }

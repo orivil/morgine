@@ -44,7 +44,7 @@ var tags = xx.ApiTags{
 func main() {
 	xx.Use(xx.Cors)
 	xx.Handle(http.MethodOptions, "/", nil, func(ctx *xx.Context) {})
-	xx.Handle("GET", "/foo", &xx.Doc{
+	xx.Handle("GET", "/foo", &xx.Doc {
 		Title: "FOO BAR",
 	}, func(ctx *xx.Context) {
 		ctx.WriteString("bar")
@@ -74,13 +74,10 @@ func main() {
 	xx.Handle("GET", "/api-data", &xx.Doc{
 		Title: "API DATA",
 	}, func(ctx *xx.Context) {
-		err := ctx.SendJSON(xx.MAP{"doc": xx.DefaultServeMux.ApiDoc()})
-		if err != nil {
-			panic(err)
-		}
+		ctx.SendJSON(xx.MAP{"doc": xx.DefaultServeMux.ApiDoc()})
 	})
 	group := xx.NewGroup(tags)
-	group = group.Use(mustLogin)
+	//group = group.Use(mustLogin)
 	accountController := group.Controller(accountsService)
 	handleLogin("POST", "/login", accountController)
 	xx.Run(":9090")

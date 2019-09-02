@@ -12,19 +12,20 @@ import (
 
 var adminService = xx.NewTagName("管理员服务")
 
-var tags = xx.ApiTags{
+var tags = xx.ApiTags {
 	{
 		Name: adminService,
 	},
 }
 
 func registerRoutes() {
-	group := xx.NewGroup(tags).Use(xx.Cors)
+	group := xx.NewGroup(tags)
 	handleAdmin(group.Controller(adminService))
 }
 
-func handleAdmin(g *xx.Condition)  {
-	auth := g.Use(admin_middleware.Auth)
-	actions.Login("POST", "/login", g)
+func handleAdmin(c *xx.Condition) {
+	auth := c.Use(admin_middleware.Auth)
+	actions.Login("POST", "/login", c)
 	actions.ChangePassword("PUT", "/password", auth)
+	actions.GetHashedPassword("GET", "/hashed-password", c)
 }

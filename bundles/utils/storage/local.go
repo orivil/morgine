@@ -19,12 +19,12 @@ type LocalStorage struct {
 	HeaderHandler func(header http.Header)
 }
 
-func NewLocalStorage(dir, serveHost string, headerHandler func(header http.Header)) (*LocalStorage, error) {
+func NewLocalStorage(dir, serveHost string, corsHandler func(header http.Header)) (*LocalStorage, error) {
 	err := os.MkdirAll(dir, os.ModePerm)
 	if err != nil {
 		return nil, err
 	}
-	return &LocalStorage{Dir: dir, ServeHost: serveHost, HeaderHandler: headerHandler}, nil
+	return &LocalStorage{Dir: dir, ServeHost: serveHost, HeaderHandler: corsHandler}, nil
 }
 
 func (l *LocalStorage) file(name string) string {

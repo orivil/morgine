@@ -17,55 +17,48 @@ var (
 	ErrUsernameIncorrect  = errors.New("用户名不存在")
 )
 
-type Account struct {
+type Admin struct {
 	ID       int
 	Username string `gorm:"unique_index"`
 	Password string
+	RoleID int `gorm:"index"`
 }
 
 func CountAdmins() (total int, err error) {
-	err = DB.Model(&Account{}).Count(&total).Error
+	err = DB.Model(&Admin{}).Count(&total).Error
 	return
 }
 
 func CreateAdmin(username, password string) error {
-	var a = &Account{}
+	var a = &Admin{}
 	DB.Model(a).Where("username=?", a.Username).Select("id").First(a)
 	if a.ID > 0 {
 		return ErrUsernameRegistered
 	}
-	password, err := hashPassword(password)
+	password, err := HashPassword(password)
 	if err != nil {
 		return err
 	}
-	return DB.Create(&Account{
+	return DB.Create(&Admin{
 		Username: username,
 		Password: password,
 	}).Error
 }
 
-func UpdatePassword(loginID int, username, oldPassword, newPassword string) error {
-	var exist = &Account{}
+func UpdatePassword(loginID int, username, newPassword string) error {
+	var exist = &Admin{}
 	DB.Model(exist).Where("id=? AND username=?", loginID, username).First(exist)
 	if exist.ID == 0 {
 		return ErrUserNotRegistered
 	}
-	err := bcrypt.CompareHashAndPassword([]byte(exist.Password), []byte(oldPassword))
-	if err != nil {
-		if err == bcrypt.ErrMismatchedHashAndPassword {
-			return ErrPasswordIncorrect
-		} else {
-			return err
-		}
-	}
-	newPassword, err = hashPassword(newPassword)
+	newPassword, err := HashPassword(newPassword)
 	if err != nil {
 		return err
 	}
 	return DB.Model(exist).Where("username=?", username).UpdateColumn("password", newPassword).Error
 }
 
-func hashPassword(password string) (string, error) {
+func HashPassword(password string) (string, error) {
 	pw, err := bcrypt.GenerateFromPassword([]byte(password), 0)
 	if err != nil {
 		return "", err
@@ -74,17 +67,17 @@ func hashPassword(password string) (string, error) {
 	}
 }
 
-func SignIn(username, password string) (id int, err error) {
-	exist := &Account{}
-	err = DB.Where("username=?", username).First(exist).Error
+func SignIn(username, password string) (admin *Admin, err error) {
+	admin = &Admin{}
+	err = DB.Where("username=?", username).First(admin).Error
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
-			return 0, ErrUsernameIncorrect
+			return nil, ErrUsernameIncorrect
 		} else {
-			return 0, err
+			return nil, err
 		}
 	}
-	err = bcrypt.CompareHashAndPassword([]byte(exist.Password), []byte(password))
+	err = bcrypt.CompareHashAndPassword([]byte(admin.Password), []byte(password))
 	if err != nil {
 		if err == bcrypt.ErrMismatchedHashAndPassword {
 			return 0, ErrPasswordIncorrect
@@ -92,11 +85,11 @@ func SignIn(username, password string) (id int, err error) {
 			return 0, err
 		}
 	}
-	return exist.ID, nil
+	return admin, nil
 }
 
-func GetAdmin(id int) (*Account, error) {
-	admin := &Account{}
+func GetAdmin(id int) (*Admin, error) {
+	admin := &Admin{}
 	err := DB.Where("id=?", id).First(admin).Error
 	if err != nil {
 		return nil, err
