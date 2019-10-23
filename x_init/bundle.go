@@ -16,7 +16,7 @@ type Bundle interface {
 	// 添加路由
 	AddRoute()
 
-	// 运行 Bundle
+	// 执行定时任务, 迁移数据库等操作
 	Run()
 }
 

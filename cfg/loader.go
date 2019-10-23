@@ -8,10 +8,22 @@ import (
 	"encoding/json"
 	"github.com/pkg/errors"
 	"gopkg.in/yaml.v2"
+	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"sync"
 )
+
+type ReadWriter interface {
+	Read(name string) (data []byte, err error)
+	Write()
+}
+
+type Loader struct {
+	rw io.ReadWriter
+	mu sync.Mutex
+}
 
 const (
 	jsonExt = ".json"
@@ -35,6 +47,10 @@ var Dir = "configs"
 // content is the default file value, if the file not exist, create one by the
 // content value.
 func Unmarshal(file, content string, schema interface{}) error {
+	err := os.MkdirAll(Dir, os.ModePerm)
+	if err != nil {
+		return err
+	}
 	filename := filepath.Join(Dir, file)
 	data, err := ioutil.ReadFile(filename)
 	if err != nil {

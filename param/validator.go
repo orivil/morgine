@@ -181,7 +181,7 @@ func (c *condition) Item(min, max int, msg string) *condition {
 
 func (c *condition) Enums(elements []string, msg string) *condition {
 	if msg == "" {
-		msg = fmt.Sprintf("one of %v", elements)
+		msg = fmt.Sprintf("emnus %v", elements)
 	}
 	c.enums = elements
 	c.enumMsgID = &msg

@@ -170,6 +170,14 @@ func NewSchema(v interface{}, validator *Validator, filter *Filter) (*Schema, er
 	return schema, nil
 }
 
+func MustNewSchema(v interface{}, validator *Validator, filter *Filter) *Schema {
+	schema, err := NewSchema(v, validator, filter)
+	if err != nil {
+		panic(err)
+	}
+	return schema
+}
+
 // 获取 struct 的字段偏移量及字段类型, 包括嵌套的字段. 只支持嵌套的 struct, 不支持 struct ptr
 func structFields(structural reflect.Type, fieldsOffset uintptr) (fields []reflect.StructField) {
 	fieldNum := structural.NumField()

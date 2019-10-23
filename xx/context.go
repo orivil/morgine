@@ -26,6 +26,8 @@ var MaxUploadMemory = int64(10 << 20) // 10MB
 // 默认消息格式
 var MessageDataType = DataTypeJson
 
+var NotFoundHandler http.Handler = http.NotFoundHandler()
+
 type Context struct {
 	Writer        http.ResponseWriter
 	Request       *http.Request
@@ -73,7 +75,8 @@ func (c *Context) HandleNext() {
 	c.handle()
 }
 
-// 结束处理链, 用于中间件中结束请求处理并立即返回结果, 用在 action 中没有任何效果
+// 结束处理链, 用于中间件中结束请求处理并立即返回结果, 用在 action 中没有任何效果.
+// SendJSON, SendXML, Message, NotFound, Redirect, WriteString 及 Write 方法会自动调用 Abort.
 func (c *Context) Abort() {
 	c.idx = len(c.handler.middles) + 1
 }
@@ -87,6 +90,10 @@ func (c *Context) abortWithError(depth int, err error) error {
 // Error 方法会将错误信息记录到 log.Error 中, 并返回 500 状态码到客户端, 且会调用 Abort 方法结束处理链
 func (c *Context) Error(err error) error {
 	return c.abortWithError(2, err)
+}
+
+func (c *Context) TraceError(depth int, err error) error {
+	return c.abortWithError(depth + 1, err)
 }
 
 func (c *Context) Set(key string, value interface{}) {
@@ -167,18 +174,22 @@ func (c *Context) parseMultipartForm() (*multipart.Form, error) {
 }
 
 func (c *Context) NotFound() {
-	http.NotFound(c.Writer, c.Request)
+	NotFoundHandler.ServeHTTP(c.Writer, c.Request)
+	c.Abort()
 }
 
 func (c *Context) Redirect(url string, code int) {
 	http.Redirect(c.Writer, c.Request, url, code)
+	c.Abort()
 }
 
 func (c *Context) WriteString(str string) (int, error) {
+	defer c.Abort()
 	return c.Writer.Write([]byte(str))
 }
 
 func (c *Context) Write(data []byte) (int, error) {
+	defer c.Abort()
 	return c.Writer.Write(data)
 }
 
