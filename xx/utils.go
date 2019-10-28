@@ -8,21 +8,16 @@ import "github.com/orivil/morgine/param"
 
 type MAP map[string]interface{}
 
-func MessageResponse(mt MsgType) *Response {
-	return &Response{
-		Body: msgData(mt, "some message"),
-	}
-}
-
-func MessageData(mt MsgType, msg string) map[string]*Message {
-	return msgData(mt, msg)
-}
-
-// 参数解析错误处理函数, 可自定义
-var HandleUnmarshalError = func(err error, ctx *Context) {
+// 错误处理函数, 可自定义
+var HandleError = func(ctx *Context, err error) {
 	if verr, ok := err.(*param.ValidatorErr); ok {
-		ctx.MsgWarning(verr.Message)
+		HandleMessage(ctx, MsgTypeError, verr.Field + ":" + verr.Message)
 	} else {
-		ctx.Error(err)
+		_ = ctx.TraceError(2, err)
 	}
+}
+
+// 消息处理函数, 可自定义
+var HandleMessage = func(ctx *Context, mt MsgType, msg string) {
+	_ = ctx.SendJSON(Message{Type:mt, Content: msg})
 }

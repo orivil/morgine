@@ -21,6 +21,7 @@ type ServeMux struct {
 	r               *router.Router
 	ErrHandler      func(w http.ResponseWriter, error string, code int)
 	RequestLogger   RequestLogger
+	NotFoundHandler http.HandlerFunc
 	apiDoc          *apiDoc
 }
 
@@ -30,6 +31,9 @@ func NewServeMux(r *router.Router) *ServeMux {
 		ErrHandler:      http.Error,
 		RequestLogger: func(req *http.Request, costTime time.Duration, statusCode int) {
 			log.Info.Printf("| %14s | %4d %s \n\n", costTime, statusCode, GetRequestInfo(req))
+		},
+		NotFoundHandler: func(writer http.ResponseWriter, request *http.Request) {
+			http.NotFound(writer, request)
 		},
 		apiDoc: newApiDoc(),
 	}
@@ -80,10 +84,10 @@ func (mux *ServeMux) ServeHTTP(writer http.ResponseWriter, req *http.Request) {
 			}
 			contextPool.Put(ctx)
 		}()
-		ctx = initContext(ctx, writer, req, vs, act.(*Handler))
+		ctx = initContext(ctx, writer, req, vs, act.(*Handler), mux)
 		ctx.handle()
 	} else {
-		NotFoundHandler.ServeHTTP(writer, req)
+		mux.NotFoundHandler(writer, req)
 	}
 }
 

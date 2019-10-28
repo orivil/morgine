@@ -23,11 +23,6 @@ import (
 // 上传文件时最大内存使用量, 超过最大内存则暂存于硬盘中
 var MaxUploadMemory = int64(10 << 20) // 10MB
 
-// 默认消息格式
-var MessageDataType = DataTypeJson
-
-var NotFoundHandler http.Handler = http.NotFoundHandler()
-
 type Context struct {
 	Writer        http.ResponseWriter
 	Request       *http.Request
@@ -38,11 +33,12 @@ type Context struct {
 	Values        map[string]interface{}
 	multipartForm *multipart.Form
 	handler       *Handler
+	mux           *ServeMux
 	err           error
 	idx           int
 }
 
-func initContext(ctx *Context, res http.ResponseWriter, req *http.Request, rvs router.Values, h *Handler) *Context {
+func initContext(ctx *Context, res http.ResponseWriter, req *http.Request, rvs router.Values, h *Handler, mux *ServeMux) *Context {
 	ctx.Writer = res
 	ctx.Request = req
 	ctx.rvs = rvs
@@ -52,6 +48,7 @@ func initContext(ctx *Context, res http.ResponseWriter, req *http.Request, rvs r
 	ctx.Values = make(map[string]interface{})
 	ctx.multipartForm = nil
 	ctx.handler = h
+	ctx.mux = mux
 	ctx.idx = 0
 	return ctx
 }
@@ -174,7 +171,7 @@ func (c *Context) parseMultipartForm() (*multipart.Form, error) {
 }
 
 func (c *Context) NotFound() {
-	NotFoundHandler.ServeHTTP(c.Writer, c.Request)
+	c.mux.NotFoundHandler(c.Writer, c.Request)
 	c.Abort()
 }
 
@@ -201,40 +198,6 @@ func (c *Context) SendJSON(v interface{}) error {
 // 发送 XML 数据, 不管是否出现错误都会调用 Abort 方法
 func (c *Context) SendXML(v interface{}) error {
 	return c.sendData(DataTypeXml, v)
-}
-
-// 发送自定义类型的消息, 不管是否出现错误都会调用 Abort 方法
-func (c *Context) Message(t MsgType, msg string) error {
-	return c.message(t, msg)
-}
-
-// 获得 message 数据
-func msgData(t MsgType, msg string) map[string]*Message {
-	return map[string]*Message{"message": {Type: t, Content: msg}}
-}
-
-// 发送 info 类型的消息, 不管是否出现错误都会调用 Abort 方法
-func (c *Context) MsgInfo(msg string) error {
-	return c.message(MsgTypeInfo, msg)
-}
-
-// 发送 error 类型的消息, 不管是否出现错误都会调用 Abort 方法
-func (c *Context) MsgError(msg string) error {
-	return c.message(MsgTypeError, msg)
-}
-
-// 发送 success 类型的消息, 不管是否出现错误都会调用 Abort 方法
-func (c *Context) MsgSuccess(msg string) error {
-	return c.message(MsgTypeSuccess, msg)
-}
-
-// 发送 warning 类型的消息, 不管是否出现错误都会调用 Abort 方法
-func (c *Context) MsgWarning(msg string) error {
-	return c.message(MsgTypeWarning, msg)
-}
-
-func (c *Context) message(t MsgType, msg string) error {
-	return c.sendData(MessageDataType, msgData(t, msg))
 }
 
 // 验证参数并将参数解析到 v 中, v 必须经过注册
