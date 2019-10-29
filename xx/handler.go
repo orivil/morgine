@@ -30,11 +30,13 @@ type Params []*Param
 
 type Responses []*Response
 
+type Body interface{}
+
 type Response struct {
 	Code        int
 	Description string
 	Headers     http.Header
-	Body        interface{}
+	Body        Body
 }
 
 type Doc struct {

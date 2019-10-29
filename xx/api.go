@@ -13,8 +13,6 @@ import (
 	"unsafe"
 )
 
-var ApiDoc = newApiDoc()
-
 type apiDoc struct {
 	Tags    ApiTags
 	Middles map[uintptr]*apiMiddle
