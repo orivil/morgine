@@ -15,6 +15,11 @@ func (k Kind) MarshalJSON() ([]byte, error) {
 	return []byte(`"` + k.String() + `"`), nil
 }
 
+func (k *Kind) UnmarshalJSON(data []byte) error {
+	*k = StrToKind(string(data))
+	return nil
+}
+
 // supported data type
 const (
 	Invalid Kind = iota
@@ -58,6 +63,15 @@ var FieldTypes = map[Kind]string{
 
 func (k Kind) String() string {
 	return FieldTypes[k]
+}
+
+func StrToKind(str string) Kind {
+	for key, value := range FieldTypes {
+		if value == str {
+			return key
+		}
+	}
+	return Invalid
 }
 
 func fieldKind(field reflect.StructField) Kind {
