@@ -13,19 +13,19 @@ import (
 	"unsafe"
 )
 
-type apiDoc struct {
+type ApiDoc struct {
 	Tags    ApiTags
 	Middles map[uintptr]*ApiMiddle
 	Actions map[uintptr][]*ApiAction
 }
 
-func newApiDoc() *apiDoc {
-	return &apiDoc{
+func newApiDoc() *ApiDoc {
+	return &ApiDoc{
 		Middles: map[uintptr]*ApiMiddle{},
 		Actions: map[uintptr][]*ApiAction{},
 	}
 }
-func (doc *apiDoc) add(depth int, tag TagName, method, route string, d *Doc, middles []*Handler) {
+func (doc *ApiDoc) add(depth int, tag TagName, method, route string, d *Doc, middles []*Handler) {
 	for _, middle := range middles {
 		ptr := uintptr(unsafe.Pointer(middle))
 		if _, ok := doc.Middles[ptr]; !ok {
@@ -62,16 +62,16 @@ func initTrace(depth int) string {
 type ApiMiddle struct {
 	Name      string
 	Desc      string
-	Params    []*apiParam
+	Params    []*ApiParam
 	Responses Responses
 }
 
-type apiParam struct {
+type ApiParam struct {
 	Type   ParamType
 	Fields []*param.Field
 }
 
-type apiParams []*apiParam
+type apiParams []*ApiParam
 
 func (ps apiParams) Len() int {
 	return len(ps)
@@ -98,7 +98,7 @@ func initApiParams(p *parser) apiParams {
 	var params apiParams
 	for key, typ := range p.types {
 		schema := p.schemas[key]
-		p := &apiParam{
+		p := &ApiParam{
 			Type:   typ,
 			Fields: schema.Fields,
 		}
@@ -115,7 +115,7 @@ type ApiAction struct {
 	Method      string           // 请求方法
 	Route       string           // 请求路由
 	Middles     []uintptr        // 中间件
-	Params      []*apiParam      // 参数
+	Params      []*ApiParam      // 参数
 	ContentType param.EncodeType // 参数编码类型
 	Responses   Responses        // 响应列表
 }

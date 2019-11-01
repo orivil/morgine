@@ -52,7 +52,7 @@ type Condition struct {
 	middles []*Handler
 	tags    ApiTags
 	tagName TagName
-	apiDoc  *apiDoc
+	ApiDoc  *ApiDoc
 	router  *router.Router
 }
 
@@ -61,7 +61,7 @@ func (g *Condition) copy() *Condition {
 		router:  g.router,
 		tagName: g.tagName,
 		tags:    g.tags,
-		apiDoc:  g.apiDoc,
+		ApiDoc:  g.ApiDoc,
 	}
 	nc.middles = make([]*Handler, len(g.middles))
 	for key, value := range g.middles {
@@ -126,7 +126,7 @@ func (g *Condition) handle(depth int, method, route string, doc *Doc, handleFunc
 	if err != nil {
 		panic(err)
 	}
-	g.apiDoc.add(depth+1, g.tagName, method, route, doc, middles)
+	g.ApiDoc.add(depth+1, g.tagName, method, route, doc, middles)
 }
 
 func Handle(method, route string, doc *Doc, handleFunc HandleFunc) {

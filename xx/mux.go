@@ -22,7 +22,7 @@ type ServeMux struct {
 	ErrHandler      func(w http.ResponseWriter, error string, code int)
 	RequestLogger   RequestLogger
 	NotFoundHandler http.HandlerFunc
-	apiDoc          *apiDoc
+	apiDoc          *ApiDoc
 }
 
 func NewServeMux(r *router.Router) *ServeMux {
@@ -45,7 +45,7 @@ var contextPool = sync.Pool {
 	},
 }
 
-func (mux *ServeMux) ApiDoc() *apiDoc {
+func (mux *ServeMux) ApiDoc() *ApiDoc {
 	return mux.apiDoc
 }
 
@@ -54,7 +54,7 @@ func (mux *ServeMux) NewGroup(tags ApiTags) *Condition {
 	return &Condition{
 		tags:   tags,
 		router: mux.r,
-		apiDoc: mux.apiDoc,
+		ApiDoc: mux.apiDoc,
 	}
 }
 
