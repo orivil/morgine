@@ -15,21 +15,21 @@ import (
 
 type apiDoc struct {
 	Tags    ApiTags
-	Middles map[uintptr]*apiMiddle
-	Actions map[uintptr][]*apiAction
+	Middles map[uintptr]*ApiMiddle
+	Actions map[uintptr][]*ApiAction
 }
 
 func newApiDoc() *apiDoc {
 	return &apiDoc{
-		Middles: map[uintptr]*apiMiddle{},
-		Actions: map[uintptr][]*apiAction{},
+		Middles: map[uintptr]*ApiMiddle{},
+		Actions: map[uintptr][]*ApiAction{},
 	}
 }
 func (doc *apiDoc) add(depth int, tag TagName, method, route string, d *Doc, middles []*Handler) {
 	for _, middle := range middles {
 		ptr := uintptr(unsafe.Pointer(middle))
 		if _, ok := doc.Middles[ptr]; !ok {
-			doc.Middles[ptr] = &apiMiddle {
+			doc.Middles[ptr] = &ApiMiddle {
 				Name:      middle.Doc.Title,
 				Desc:      middle.Doc.Desc,
 				Params:    initApiParams(middle.Doc.parser),
@@ -37,7 +37,7 @@ func (doc *apiDoc) add(depth int, tag TagName, method, route string, d *Doc, mid
 			}
 		}
 	}
-	act := &apiAction {
+	act := &ApiAction {
 		Name:        d.Title,
 		Desc:        d.Desc,
 		Trace:       initTrace(depth + 1),
@@ -59,7 +59,7 @@ func initTrace(depth int) string {
 	return fmt.Sprintf("%s: %d", file, line)
 }
 
-type apiMiddle struct {
+type ApiMiddle struct {
 	Name      string
 	Desc      string
 	Params    []*apiParam
@@ -108,7 +108,7 @@ func initApiParams(p *parser) apiParams {
 	return params
 }
 
-type apiAction struct {
+type ApiAction struct {
 	Name        string           // 名称
 	Desc        string           // 描述
 	Trace       string           // 注册地址(runtime file:line)
