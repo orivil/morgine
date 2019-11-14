@@ -61,8 +61,33 @@ var FieldTypes = map[Kind]string{
 	Invalid:      "invalid",
 }
 
+// see: https://jsdoc.app/tags-param.html
+var JSDocFieldTypes = map[Kind]string{
+	String:       "string",
+	Int:          "number",
+	Int32:        "number",
+	Int64:        "number",
+	Float32:      "number",
+	Float64:      "number",
+	Bool:         "boolean",
+	File:         "file",
+	TimePtr:      "date",
+	SliceString:  "string[]",
+	SliceInt:     "number[]",
+	SliceInt32:   "number[]",
+	SliceInt64:   "number[]",
+	SliceFloat32: "number[]",
+	SliceFloat64: "number[]",
+	SliceBool:    "boolean[]",
+	Invalid:      "invalid",
+}
+
 func (k Kind) String() string {
 	return FieldTypes[k]
+}
+
+func (k Kind) JSType() string {
+	return JSDocFieldTypes[k]
 }
 
 func StrToKind(str string) Kind {
