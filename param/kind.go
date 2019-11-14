@@ -16,7 +16,7 @@ func (k Kind) MarshalJSON() ([]byte, error) {
 }
 
 func (k *Kind) UnmarshalJSON(data []byte) error {
-	*k = StrToKind(string(data))
+	*k = TypeFields[string(data)]
 	return nil
 }
 
@@ -61,6 +61,14 @@ var FieldTypes = map[Kind]string{
 	Invalid:      "invalid",
 }
 
+var TypeFields = func(fieldTypes map[Kind]string) map[string]Kind {
+	tfs := make(map[string]Kind, len(fieldTypes))
+	for key, value := range fieldTypes {
+		tfs[`"` + value + `"`] = key
+	}
+	return tfs
+}(FieldTypes)
+
 // see: https://jsdoc.app/tags-param.html
 var JSDocFieldTypes = map[Kind]string{
 	String:       "string",
@@ -88,15 +96,6 @@ func (k Kind) String() string {
 
 func (k Kind) JSType() string {
 	return JSDocFieldTypes[k]
-}
-
-func StrToKind(str string) Kind {
-	for key, value := range FieldTypes {
-		if value == str {
-			return key
-		}
-	}
-	return Invalid
 }
 
 func fieldKind(field reflect.StructField) Kind {
