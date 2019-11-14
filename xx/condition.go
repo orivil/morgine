@@ -111,6 +111,7 @@ func (g *Condition) handle(depth int, method, route string, doc *Doc, handleFunc
 	if doc == nil {
 		doc = &Doc{}
 	}
+	DocFilter(doc)
 	if g.tagName == nil {
 		panic("controller name is nil")
 	}
