@@ -12,9 +12,6 @@ import (
 	"reflect"
 )
 
-// controller document 过滤器, 可用于设置默认参数, 默认响应等, 该方法不会过滤中间件的 document
-var ControllerDocFilter = func(doc *Doc) {}
-
 type ParamType string
 
 const (

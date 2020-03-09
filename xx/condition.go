@@ -12,21 +12,24 @@ import (
 	"strings"
 )
 
-var globalMiddles []*Handler
+// controller document 过滤器, 可用于设置默认参数, 默认响应等, 该方法不会过滤中间件的 document
+var ControllerDocFilter = func(doc *Doc) {}
 
-func NewGroup(tags ApiTags) *Condition {
-	return DefaultServeMux.NewGroup(tags)
-}
+var globalMiddles []*Handler
 
 var DefaultTag = NewTagName("defaults")
 
 var DefaultGroup = NewGroup(
-	ApiTags{
+	ApiTags {
 		{
 			Name: DefaultTag,
 		},
 	},
 ).Controller(DefaultTag)
+
+func NewGroup(tags ApiTags) *Condition {
+	return DefaultServeMux.NewGroup(tags)
+}
 
 func Use(middles ...*Handler) {
 	initParser(middles...)
@@ -111,7 +114,7 @@ func (g *Condition) handle(depth int, method, route string, doc *Doc, handleFunc
 	if doc == nil {
 		doc = &Doc{}
 	}
-	DocFilter(doc)
+	ControllerDocFilter(doc)
 	if g.tagName == nil {
 		panic("controller name is nil")
 	}
