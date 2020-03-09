@@ -10,7 +10,6 @@ import (
 	"gopkg.in/yaml.v2"
 	"io"
 	"io/ioutil"
-	"os"
 	"path/filepath"
 	"sync"
 )
@@ -31,9 +30,6 @@ const (
 	yamlExt = ".yaml"
 )
 
-// configuration file directory, could change from outside
-var Dir = "configs"
-
 // Unmarshal parses the JSON/YAML data and stores the result
 // in the value pointed to by schema. If v is nil or not a pointer,
 // Unmarshal returns an error.
@@ -46,23 +42,11 @@ var Dir = "configs"
 // file is the file name under the Dir directory
 // content is the default file value, if the file not exist, create one by the
 // content value.
-func Unmarshal(file, content string, schema interface{}) error {
-	err := os.MkdirAll(Dir, os.ModePerm)
+func Unmarshal(file string, schema interface{}) error {
+	data, err := ioutil.ReadFile(file)
 	if err != nil {
+
 		return err
-	}
-	filename := filepath.Join(Dir, file)
-	data, err := ioutil.ReadFile(filename)
-	if err != nil {
-		if os.IsNotExist(err) {
-			data = []byte(content)
-			err = ioutil.WriteFile(filename, data, os.ModePerm)
-			if err != nil {
-				return errors.Wrap(err, "create config file failed")
-			}
-		} else {
-			return errors.Wrap(err, "read config file failed")
-		}
 	}
 	ext := filepath.Ext(file)
 
@@ -121,9 +105,9 @@ func Unmarshal(file, content string, schema interface{}) error {
 }
 
 // UnmarshalMap is a helper function for loading the config data to map
-func UnmarshalMap(file, content string) (schema Configs, err error) {
+func UnmarshalMap(file string) (schema Configs, err error) {
 	schema = make(Configs, 5)
-	err = Unmarshal(file, content, &schema)
+	err = Unmarshal(file, &schema)
 	if err != nil {
 		return nil, err
 	} else {
