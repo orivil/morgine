@@ -19,6 +19,7 @@ type CFBCrypto struct {
 	block cipher.Block
 }
 
+// 16, 24, 32 位 key 分别对应：AES-128, AES-192, or AES-256 加解密方式
 func NewCFBCrypto(key string) (ac *CFBCrypto, err error) {
 	block, err := aes.NewCipher([]byte(key))
 	if err != nil {
