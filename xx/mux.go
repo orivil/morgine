@@ -80,6 +80,7 @@ func (mux *ServeMux) ServeHTTP(writer http.ResponseWriter, req *http.Request) {
 				log.Panic.Printf("%s\n http panic: %s\n %s", GetRequestInfo(req), err, buf)
 				mux.ErrHandler(ctx.Writer, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			} else if ctx.err != nil {
+				log.Error.Println(ctx.err)
 				mux.ErrHandler(ctx.Writer, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			}
 			contextPool.Put(ctx)
