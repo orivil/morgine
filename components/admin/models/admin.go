@@ -4,11 +4,18 @@
 
 package models
 
-import "time"
+import (
+	"github.com/orivil/morgine/utils/sql"
+	"time"
+)
 
 type Admin struct {
 	ID int
-	Account string
+	Username string `gorm:"unique_index"`
 	Password string
+	Super sql.Boolean `gorm:"index"`
+	ParentID int `gorm:"index"`
+	Forefather string `gorm:"index"`
+	Level int `gorm:"index" desc:"账号层级，顶级管理员层级为1，随子账号逐步递增"`
 	CreatedAt *time.Time
 }

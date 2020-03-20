@@ -4,20 +4,43 @@
 
 package xx
 
-import "github.com/orivil/morgine/param"
+import (
+	"github.com/orivil/morgine/param"
+)
 
 type MAP map[string]interface{}
 
 // 错误处理函数, 可自定义
 var HandleError = func(ctx *Context, err error) {
 	if verr, ok := err.(*param.ValidatorErr); ok {
-		HandleMessage(ctx, MsgTypeError, verr.Field + ":" + verr.Message)
+		SendMessage(ctx, MsgTypeError, verr.Field + ":" + verr.Message)
 	} else {
 		_ = ctx.TraceError(2, err)
 	}
 }
 
 // 消息处理函数, 可自定义
-var HandleMessage = func(ctx *Context, mt MsgType, msg string) {
+var SendMessage = func(ctx *Context, mt MsgType, msg string) {
 	_ = ctx.SendJSON(Message{Type:mt, Content: msg})
+}
+
+// json 数据处理函数，可自定义
+var SendJson = func(ctx *Context, code StatusCode, data interface{}) {
+	_ = ctx.SendJSON(JsonData(code, data))
+}
+
+// 消息数据模型
+var MessageData = func(mt MsgType, msg string) *Message {
+	return &Message {
+		Type: mt,
+		Content: msg,
+	}
+}
+
+// json 数据结构函数，可自定义
+var JsonData = func(code StatusCode, data interface{}) MAP {
+	return MAP {
+		"code": code,
+		"data": data,
+	}
 }

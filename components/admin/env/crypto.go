@@ -4,11 +4,6 @@
 
 package env
 
-var Config = struct {
-	// 图片顶级目录, 后面不可加 “/”
-	ImgDir string
-	AuthTokenExpiredDay int
-}{
-	ImgDir: "images",
-	AuthTokenExpiredDay: 30,
-}
+import "github.com/orivil/morgine/utils/crypto"
+
+var AesCrypto crypto.Interface

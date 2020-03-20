@@ -2,29 +2,22 @@
 // Use of this source code is governed by a MIT-style
 // license that can be found at https://mit-license.org.
 
-package utils
+package utils_test
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/orivil/morgine/components/admin/utils"
 )
 
 func ExampleWalkDirs() {
-	dir := "../../../"
-	dirs, err := WalkDirs(dir)
+	dir := "images"
+	dirs, err := utils.WalkDirs(dir)
 	if err != nil {
 		panic(err)
 	}
-	buf := bytes.NewBuffer(nil)
-	encoder := json.NewEncoder(buf)
-	encoder.SetIndent("", "\t")
-	err = encoder.Encode(dirs)
-	if err != nil {
-		panic(err)
-	}
-
-	fmt.Println(buf.String())
+	data, _ := json.Marshal(dirs)
+	fmt.Println(string(data))
 	// Output:
-	// 134
+	// {"images":{"avatar":{"admin":{},"user":{}},"cache":{},"photo":{}}}
 }
