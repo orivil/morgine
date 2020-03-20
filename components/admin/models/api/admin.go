@@ -52,20 +52,23 @@ type Account struct {
 
 // 获得所有子管理员列表
 func GetSubAdmins(parentID int) (accounts []*Account) {
+	// 找到所有子账号
 	var admins []*models.Admin
-	db.DB.Where("forefather LIKE ?", "%|" + strconv.Itoa(parentID) + "|%").Order("id desc").Find(&admins)
+	arg := "%|" + strconv.Itoa(parentID) + "|%"
+	db.DB.Where("forefather LIKE ?", arg).Order("id desc").Find(&admins)
 	for _, a1 := range admins {
-		// 找到每个账户的子账号
-		account := &Account{
+		account := &Account {
 			Admin: a1,
 		}
 		for _, a2 := range admins {
 			if a2.ParentID == a1.ID {
-				a1.Subs = append(a1.Subs, a2)
+				account.Subs = append(account.Subs, &Account{
+					Admin: a2,
+				})
 			}
 		}
 		if a1.ParentID == parentID {
-			accounts = append(accounts, a1)
+			accounts = append(accounts, account)
 		}
 	}
 	return accounts
