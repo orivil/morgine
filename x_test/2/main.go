@@ -6,11 +6,15 @@ package main
 
 import (
 	"fmt"
-	"path/filepath"
 )
 
 func main() {
-	dir := "images/"
-	dir = filepath.Join(dir)
-	fmt.Println(dir)
+	fmt.Println(2147483647 >> 10 )
+	fmt.Println(2147483647 >> 20 )
+	fmt.Println(2147483647 >> 21 )
+	fmt.Println(2147483647 >> 22 )
+	fmt.Println(2147483647 >> 30 )
+	fmt.Println(1 << 10 )
+	fmt.Println(1 << 20 )
+	fmt.Println(1 << 21 )
 }

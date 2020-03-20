@@ -9,6 +9,7 @@ import (
 	"github.com/orivil/morgine/components/admin/models"
 	"github.com/orivil/morgine/components/admin/models/db"
 	"github.com/orivil/morgine/utils/sql"
+	"strconv"
 	"time"
 )
 
@@ -45,21 +46,20 @@ func CreateSubAdmin(parentID int, admin *models.Admin) error {
 }
 
 type Account struct {
-	ID int
-	Username string `gorm:"unique_index"`
-	Super sql.Boolean `gorm:"index"`
-	ParentID int `gorm:"index"`
-	CreatedAt *time.Time
+	*models.Admin
 	Subs []*Account
 }
 
-// 获得子管理员列表
-func GetSubAccounts(parentID int) (accounts []*Account) {
-	var all []*Account
-	db.DB.Model(&models.Admin{}).Scan(&all)
-	for _, a1 := range all {
+// 获得所有子管理员列表
+func GetSubAdmins(parentID int) (accounts []*Account) {
+	var admins []*models.Admin
+	db.DB.Where("forefather LIKE ?", "%|" + strconv.Itoa(parentID) + "|%").Order("id desc").Find(&admins)
+	for _, a1 := range admins {
 		// 找到每个账户的子账号
-		for _, a2 := range all {
+		account := &Account{
+			Admin: a1,
+		}
+		for _, a2 := range admins {
 			if a2.ParentID == a1.ID {
 				a1.Subs = append(a1.Subs, a2)
 			}
