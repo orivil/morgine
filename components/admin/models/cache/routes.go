@@ -4,35 +4,36 @@
 
 package cache
 
-import (
-	"github.com/orivil/morgine/components/admin/models"
-)
+type Route struct {
+	Title string
+	Method string
+	Path string
+}
 
-var RouteMux = &routeMux{
-	ls: []*models.Route{},
-	ms: make(map[string]*models.Route, 50),
+var FrontendRouteMux = &routeMux {
+	ls: []*Route{},
+	ms: make(map[string]*Route, 50),
 }
 
 type routeMux struct {
-	ls []*models.Route
-	ms map[string]*models.Route
+	ls []*Route
+	ms map[string]*Route
 }
 
 func (rm *routeMux) Init(title, method, path string) {
-	route := &models.Route {
+	route := &Route {
 		Title:  title,
-		Method: method,
 		Path:   path,
 	}
 	rm.ls = append(rm.ls, route)
 	rm.ms[method + path] = route
 }
 
-func (rm *routeMux) AllRoutes() []*models.Route {
+func (rm *routeMux) AllRoutes() []*Route {
 	return rm.ls
 }
 
-func (rm *routeMux) GetRoutes(routes []string) (rs []*models.Route) {
+func (rm *routeMux) GetRoutes(routes []string) (rs []*Route) {
 	for _, route := range routes {
 		if r, ok := rm.ms[route]; ok {
 			rs = append(rs, r)

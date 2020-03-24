@@ -6,42 +6,61 @@ package api
 
 import (
 	"errors"
+	"github.com/jinzhu/gorm"
 	"github.com/orivil/morgine/components/admin/models"
 	"github.com/orivil/morgine/components/admin/models/db"
-	"github.com/orivil/morgine/utils/sql"
+	"github.com/orivil/morgine/components/admin/utils"
+	"golang.org/x/crypto/bcrypt"
 	"strconv"
-	"time"
+	"strings"
 )
 
 var (
 	ErrUsernameAlreadyExist = errors.New("用户名已注册")
+	ErrNoDelAdminContainsSub = errors.New("不可删除包含子账号的账号")
+	ErrLoginUsernameIncorrect = errors.New("用户名错误")
+	ErrOnlyCanDelOwnSubAccount = errors.New("只能删除自己的后代账号")
+	ErrMismatchedPassword = bcrypt.ErrMismatchedHashAndPassword
+	ErrNeedSuperAdmin = errors.New("需要超级管理员才能操作")
+	ErrOnlyCanCreateOwnSubAccount = errors.New("只能创建属于自己的子账号")
 )
 
 // 创建子管理员
-func CreateSubAdmin(parentID int, admin *models.Admin) error {
+func CreateSubAdmin(loginID, parentID int, admin *models.Admin) error {
 	admin.ID = 0
 	if IsIDExist(db.DB.Model(&models.Admin{}).Where("username=?", admin.Username)) {
 		return ErrUsernameAlreadyExist
 	} else {
-		if admin.Super.IsTrue() {
-			var super []sql.Boolean
-			db.DB.Model(&models.Admin{}).Where("id=?").Limit(1).Pluck("super", &super)
-			if len(super) != 1 {
-				return errors.New("parent admin not exist")
-			} else {
-				if !super[0].IsTrue() {
-					return errors.New("非超级管理员不可创建超级管理员")
-				}
-			}
-		}
 		parent, err := getAccount(parentID)
 		if err != nil {
 			return err
 		}
+		if loginID != parentID && !strings.Contains(parent.Forefather, "|" + strconv.Itoa(loginID) + "|") {
+			return ErrOnlyCanCreateOwnSubAccount
+		}
+		if !parent.Super.IsTrue() {
+			return ErrNeedSuperAdmin
+		}
+		var pass []byte
+		pass, err = bcrypt.GenerateFromPassword([]byte(admin.Password), utils.RandomInt(bcrypt.MinCost, bcrypt.MaxCost))
+		if err != nil {
+			return err
+		}
+		admin.Password = string(pass)
 		admin.ParentID = parentID
-		admin.Level = parent.Level + 1
-		admin.Forefather = parent.Forefather + "," +
+		admin.Forefather = parent.Forefather + "|" + strconv.Itoa(parentID)
 		return db.DB.Create(admin).Error
+	}
+}
+
+func GetAdminByID(id int) *models.Admin {
+	admin := &models.Admin{}
+	db.DB.Where("id=?", id).First(admin)
+	if admin.ID > 0 {
+		admin.Password = ""
+		return admin
+	} else {
+		return nil
 	}
 }
 
@@ -57,6 +76,7 @@ func GetSubAdmins(parentID int) (accounts []*Account) {
 	arg := "%|" + strconv.Itoa(parentID) + "|%"
 	db.DB.Where("forefather LIKE ?", arg).Order("id desc").Find(&admins)
 	for _, a1 := range admins {
+		a1.Password = ""
 		account := &Account {
 			Admin: a1,
 		}
@@ -74,12 +94,77 @@ func GetSubAdmins(parentID int) (accounts []*Account) {
 	return accounts
 }
 
-func DelSubAccount(parentID, childID int) {
-
+func DelSubAccount(parentID, childID int) error {
+	arg := "%|" + strconv.Itoa(childID) + "|%"
+	if IsIDExist(db.DB.Where("forefather LIKE ?", arg)) { // 检测被删除的账号是否存在子孙账号
+		return ErrNoDelAdminContainsSub
+	} else {
+		arg = "%|" + strconv.Itoa(parentID) + "|%"
+		anum := db.DB.Where("id=? AND forefather LIKE ?", childID, parentID).Delete(&models.Admin{}).RowsAffected
+		if anum == 1 {
+			return nil
+		} else if anum == 0 {
+			return ErrOnlyCanDelOwnSubAccount
+		} else {
+			return errors.New("invalid operation")
+		}
+	}
 }
 
-func LoginAdmin(account, password string) error {
-	db.DB.Where("")
+func LoginAdmin(username, password string) (admin *models.Admin, err error) {
+	admin = &models.Admin{}
+	err = db.DB.Where("username=?", username).First(admin).Error
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, ErrLoginUsernameIncorrect
+		} else {
+			return nil, err
+		}
+	} else {
+		err = bcrypt.CompareHashAndPassword([]byte(admin.Password), []byte(password))
+		if err != nil {
+			if err == bcrypt.ErrMismatchedHashAndPassword {
+				return nil, ErrMismatchedPassword
+			} else {
+				return nil, err
+			}
+		}
+		admin.Password = ""
+		return admin, err
+	}
+}
+
+func UpdateAdminPassword(parentID, subID int, password string) error {
+	pass, err := bcrypt.GenerateFromPassword([]byte(password), utils.RandomInt(bcrypt.MinCost, bcrypt.MaxCost))
+	if err != nil {
+		return err
+	}
+	var affected int64
+	if subID > 0 {
+		affected = db.DB.Model(&models.Admin{}).Where("id=? AND forefather LIKE ?", subID, "%|" + strconv.Itoa(parentID) + "|%").UpdateColumn("password", string(pass)).RowsAffected
+	} else {
+		affected = db.DB.Model(&models.Admin{}).Where("id=?", parentID).UpdateColumn("password", string(pass)).RowsAffected
+	}
+	if affected == 1 {
+		return nil
+	} else {
+		return errors.New("failed")
+	}
+}
+
+func UpdateAdminInfo(parentID, subID int, info *models.Admin) error {
+	var affected int64
+	if subID > 0 {
+		arg := "%|" + strconv.Itoa(parentID) + "|%"
+		affected = db.DB.Model(&models.Admin{}).Where("id=? AND forefather LIKE ?", subID, arg).Updates(info).RowsAffected
+	} else {
+		affected = db.DB.Model(&models.Admin{}).Where("id=?", parentID).Updates(info).RowsAffected
+	}
+	if affected == 1 {
+		return nil
+	} else {
+		return errors.New("failed")
+	}
 }
 
 func getAccount(id int) (admin *models.Admin, err error) {
@@ -90,4 +175,8 @@ func getAccount(id int) (admin *models.Admin, err error) {
 	} else {
 		return admin, nil
 	}
+}
+
+func IsSubAdmin(parentID, childID int) bool {
+	return IsIDExist(db.DB.Model(&models.Admin{}).Where("id=? AND forefather LIKE ?", childID, "%|" + strconv.Itoa(parentID) + "|%"))
 }

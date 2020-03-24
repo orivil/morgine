@@ -2,10 +2,8 @@
 // Use of this source code is governed by a MIT-style
 // license that can be found at https://mit-license.org.
 
-package models
+package handler
 
-type Route struct {
-	Title string
-	Method string
-	Path string
+func ()  {
+	
 }

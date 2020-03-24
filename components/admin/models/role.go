@@ -6,6 +6,6 @@ package models
 
 type Role struct {
 	ID int
-	ParentID int `gorm:"index"`
-	Name string
+	Description string `desc:"描述"`
+	Name string `gorm:"unique_index"`
 }

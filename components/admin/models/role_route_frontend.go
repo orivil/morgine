@@ -4,8 +4,8 @@
 
 package models
 
-type RoleRoute struct {
+type RoleRouteFrontend struct {
 	ID int
-	RoleID int `gorm:"unique_index:rindex"`
-	Route string `gorm:"unique_index:rindex"`
+	RoleID int `gorm:"index"`
+	Route string `gorm:"index"`
 }

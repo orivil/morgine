@@ -4,8 +4,8 @@
 
 package models
 
-type AdminRole struct{
+type RoleRouteBackend struct {
 	ID int
-	AdminID int `gorm:"unique_key"`
-	Role string `gorm:"index"`
+	RoleID int `gorm:"index"`
+	Route string `gorm:"index"`
 }

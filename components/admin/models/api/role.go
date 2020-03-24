@@ -15,12 +15,12 @@ var (
 	ErrNoDelParentRole = errors.New("不可删除父辈角色")
 )
 
-func GetAllRoles() (roles []*models.Role) {
+func GetAllRoles(adminID int) (roles []*models.Role) {
 	db.DB.Order("id asc").Find(&roles)
 	return
 }
 
-func CreateRole(role *models.Role) error {
+func CreateRole(adminID int, role *models.Role) error {
 	return db.DB.Create(role).Error
 }
 

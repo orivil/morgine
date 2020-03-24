@@ -26,7 +26,7 @@ var Admin = func() *xx.Handler {
 					Schema: &param{},
 				},
 			},
-			Responses: xx.Responses{
+			Responses: xx.Responses {
 				{
 					Description: "未登录",
 					Body: xx.JsonData(xx.StatusUnauthorized, nil),
@@ -54,6 +54,7 @@ var Admin = func() *xx.Handler {
 					if code != xx.StatusSuccess {
 						xx.SendJson(ctx, code, nil)
 					} else {
+						setAdminToken(ps.Authorization, ctx)
 						setAdminID(id, ctx)
 					}
 				}
@@ -100,12 +101,22 @@ func decryptToken(token string) (id int, code xx.StatusCode) {
 }
 
 var adminIDKey = "_admin_id"
+var adminTokenKey = "_admin_token"
 
 func setAdminID(id int, ctx *xx.Context) {
 	ctx.Set(adminIDKey, id)
 }
 
+func setAdminToken(token string, ctx *xx.Context) {
+	ctx.Set(adminTokenKey, token)
+}
+
 func GetAdminID(ctx *xx.Context) (id int) {
 	id, _ = ctx.Get(adminIDKey).(int)
+	return
+}
+
+func GetAdminToken(ctx *xx.Context) (token string) {
+	token, _ = ctx.Get(adminTokenKey).(string)
 	return
 }

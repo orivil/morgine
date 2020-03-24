@@ -5,19 +5,33 @@
 package utils_test
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"github.com/orivil/morgine/components/admin/utils"
 )
 
 func ExampleWalkDirs() {
-	dir := "images"
-	dirs, err := utils.WalkDirs(dir)
+	dir := "images/avatar"
+	d, err := utils.WalkDirs(dir)
 	if err != nil {
 		panic(err)
 	}
-	data, _ := json.Marshal(dirs)
+	data, _ := formatMarshalJson(d)
+	//data, _ := json.Marshal(dirs)
 	fmt.Println(string(data))
 	// Output:
 	// {"images":{"avatar":{"admin":{},"user":{}},"cache":{},"photo":{}}}
+}
+
+func formatMarshalJson(v interface{}) (data []byte, err error) {
+	buf := new(bytes.Buffer)
+	encoder := json.NewEncoder(buf)
+	encoder.SetIndent("", "\t")
+	err = encoder.Encode(v)
+	if err != nil {
+		return nil, err
+	} else {
+		return buf.Bytes(), nil
+	}
 }
