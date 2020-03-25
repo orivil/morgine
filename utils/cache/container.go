@@ -10,7 +10,6 @@ import (
 )
 
 type Container struct {
-	checkExpireNum int // 随机检查过期数量
 	values expireValues
 	locker sync.Mutex
 }
@@ -22,8 +21,8 @@ type expireValue struct {
 	value interface{}
 }
 
-func NewContainer(checkExpireNum int) *Container {
-	return &Container{values: make(expireValues), checkExpireNum: checkExpireNum}
+func NewContainer() *Container {
+	return &Container{values: make(expireValues)}
 }
 
 func (c *Container) Flash(key interface{}) {
@@ -38,29 +37,32 @@ func (c *Container) Len() int {
 	return len(c.values)
 }
 
-func (c *Container) Set(key, value interface{}, expire time.Duration) {
+func (c *Container) CheckAndDelExpires(checkNum int, now time.Time) (deleted int) {
 	c.locker.Lock()
 	defer c.locker.Unlock()
-	vue := &expireValue{
+	for key, value := range c.values {
+		if checkNum == 0 {
+			break
+		}
+		if value.expireAt != nil && value.expireAt.After(now) {
+			delete(c.values, key)
+			deleted ++
+		}
+		deleted--
+	}
+	return deleted
+}
+
+// expireAt 为 nil 则不过期
+func (c *Container) Set(key, value interface{}, expireAt *time.Time) {
+	c.locker.Lock()
+	defer c.locker.Unlock()
+	vue := &expireValue {
 		expireAt: nil,
 		value:    value,
 	}
-	if expire > 0 {
-		now := time.Now()
-		expireAt := now.Add(expire)
-		vue.expireAt = &expireAt
-
-		// delete expired data
-		num := c.checkExpireNum
-		for key, value := range c.values {
-			if num == 0 {
-				break
-			}
-			if value.expireAt != nil && value.expireAt.After(now) {
-				delete(c.values, key)
-			}
-			num--
-		}
+	if expireAt != nil {
+		vue.expireAt = expireAt
 	}
 	c.values[key] = vue
 }
