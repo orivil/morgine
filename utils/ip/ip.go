@@ -77,23 +77,19 @@ func GetLocalIP() (string, error) {
 	return "", errors.New("unexpected error")
 }
 
-// TODO: 待验证
+// 获得请求客户端IP, https://github.com/gin-gonic/gin/blob/master/context.go#L698
 func GetHttpRequestIP(request *http.Request) string {
-	addr := request.Header.Get("X-Real-IP")
-	if addr == "" {
-		addr = request.Header.Get("X-Forwarded-For")
-		if addr != "" {
-			addrs := strings.Split(addr, ",")
-			for _, value := range addrs {
-				if len(value) > 0 {
-					addr = value
-					break
-				}
-			}
-		}
+	clientIP := request.Header.Get("X-Forwarded-For")
+	if clientIP != "" {
+		clientIP = strings.Split(clientIP, ",")[0]
+	} else {
+		clientIP = request.Header.Get("X-Real-Ip")
 	}
-	if addr == "" {
-		addr = request.RemoteAddr
+	if clientIP != "" {
+		return strings.TrimSpace(clientIP)
 	}
-	return addr
+	if ip, _, err := net.SplitHostPort(strings.TrimSpace(request.RemoteAddr)); err == nil {
+		return ip
+	}
+	return ""
 }
