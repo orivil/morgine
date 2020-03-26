@@ -44,3 +44,12 @@ var JsonData = func(code StatusCode, data interface{}) MAP {
 		"data": data,
 	}
 }
+
+// http.Error() 返回结果模型
+var HttpErrorResponse = func(err string, statusCode int) *Response {
+	return &Response {
+		Code:        statusCode,
+		Description: "",
+		Body:        err,
+	}
+}
