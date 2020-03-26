@@ -4,17 +4,11 @@
 
 package main
 
-import (
-	"fmt"
-)
+import "fmt"
 
 func main() {
-	fmt.Println(2147483647 >> 10 )
-	fmt.Println(2147483647 >> 20 )
-	fmt.Println(2147483647 >> 21 )
-	fmt.Println(2147483647 >> 22 )
-	fmt.Println(2147483647 >> 30 )
-	fmt.Println(1 << 10 )
-	fmt.Println(1 << 20 )
-	fmt.Println(1 << 21 )
+	var values = map[string]map[string]string{}
+
+	values[""] = map[string]string{}
+	fmt.Println(values[""])
 }

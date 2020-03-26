@@ -212,6 +212,44 @@ func (c *Context) Unmarshal(v ...interface{}) error {
 	return errors.New("context aborted")
 }
 
+// 辅助函数，发送 JSON 格式的消息
+func (c *Context) SendJsonMessage(typ MsgType, content string) error {
+	return c.SendJSON(Message {
+		Type:    typ,
+		Content: content,
+	})
+}
+
+// 辅助函数，获得消息数据模型
+func MessageData(typ MsgType, content string) Message {
+	return Message {
+		Type:    typ,
+		Content: content,
+	}
+}
+
+// 辅助函数，发送 JSON 格式的状态数据
+func (c *Context) SendStatusJsonData(code StatusCode, data interface{}) error {
+	return c.SendJSON(StatusJsonData(code, data))
+}
+
+// 辅助函数，带有状态的数据模型
+func StatusJsonData(code StatusCode, data interface{}) StatusData {
+	return StatusData{
+		Code: code,
+		Data: data,
+	}
+}
+
+// 辅助函数，获得 http.Error 方法返回的响应数据，用于辅助编写文档
+func HttpErrorResponse(desc, error string, status int) *Response {
+	return &Response {
+		Code:        status,
+		Description: desc,
+		Body:        error,
+	}
+}
+
 var dataBuffer = sync.Pool{
 	New: func() interface{} {
 		return &bytes.Buffer{}

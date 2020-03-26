@@ -7,13 +7,13 @@ package xx
 type MsgType string
 
 const (
-	MsgTypeSuccess MsgType = "success"
-	MsgTypeInfo    MsgType = "info"
-	MsgTypeWarning MsgType = "warning"
-	MsgTypeError   MsgType = "error"
+	MsgSuccess MsgType = "success"
+	MsgInfo    MsgType = "info"
+	MsgWarning MsgType = "warning"
+	MsgError   MsgType = "error"
 )
 
 type Message struct {
-	Type    MsgType `json:"type"`
-	Content string  `json:"content"`
+	Type    MsgType `json:"type" xml:"type"`
+	Content string  `json:"content" xml:"content"`
 }
