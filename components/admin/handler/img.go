@@ -10,7 +10,7 @@ import (
 	"github.com/orivil/morgine/components/admin/env"
 	"github.com/orivil/morgine/components/admin/utils"
 	"github.com/orivil/morgine/param"
-	"github.com/orivil/morgine/utils/rand"
+	"github.com/orivil/morgine/utils/random"
 	"github.com/orivil/morgine/xx"
 	"io/ioutil"
 	"mime/multipart"
@@ -282,7 +282,7 @@ func UploadDirImage(method, route string, cdt *xx.Condition) {
 						return err
 					}
 					ext := filepath.Ext(header.Filename)
-					name := string(rand.NewRandByte(32))
+					name := string(random.NewRandByte(32))
 					filename := filepath.Join(root, q.Dir, name + ext)
 					image = &img {
 						Name: filename,
