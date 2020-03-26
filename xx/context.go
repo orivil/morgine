@@ -11,6 +11,7 @@ import (
 	"errors"
 	"github.com/orivil/morgine/log"
 	"github.com/orivil/morgine/router"
+	"github.com/orivil/morgine/utils/ip"
 	"io"
 	"mime/multipart"
 	"net/http"
@@ -239,6 +240,10 @@ func StatusJsonData(code StatusCode, data interface{}) StatusData {
 		Code: code,
 		Data: data,
 	}
+}
+
+func (c *Context) ClientIP() string {
+	return ip.GetHttpRequestIP(c.Request)
 }
 
 // 辅助函数，获得 http.Error 方法返回的响应数据，用于辅助编写文档
