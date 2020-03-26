@@ -7,5 +7,5 @@ package models
 type AdminRole struct{
 	ID int
 	AdminID int `gorm:"unique_key"`
-	Role string `gorm:"index"`
+	RoleID int `gorm:"index"`
 }

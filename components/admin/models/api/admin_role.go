@@ -31,7 +31,7 @@ func AddAdminRole(parentID, adminID, roleID int) error {
 			return errors.New("当前登录账号没有该权限")
 		}
 	}
-	return db.DB.Create(&models.AdminRole{
+	return db.DB.Create(&models.AdminRole {
 		ID:      0,
 		AdminID: adminID,
 		RoleID:  roleID,

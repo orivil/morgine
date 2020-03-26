@@ -17,13 +17,13 @@ func Login(method, route string, cdt *xx.Condition) {
 		Username string `param:"username" desc:"用户名"`
 		Password string `param:"password" desc:"密码"`
 	}
-	doc := &xx.Doc{
+	doc := &xx.Doc {
 		Title:     "登录",
 		Desc:      "",
-		Params:    xx.Params{
+		Params:    xx.Params {
 			{Type:xx.Form, Schema:&params{}},
 		},
-		Responses: xx.Responses{
+		Responses: xx.Responses {
 			{
 				Description: "将 token 保存起来, 在全局请求头 Header 中都加入 Authorization: token 值",
 				Body:xx.JsonData(xx.StatusSuccess, xx.MAP{

@@ -11,9 +11,13 @@ import (
 )
 var ErrBackendRoleRouteAlreadyExist = errors.New("backend role route already exist")
 
-func GetBackendRoleRoutes(roleID int) (routes []*models.RoleRouteBackend) {
-	db.DB.Where("role_id = ?", roleID).Order("id asc").Find(&routes)
-	return
+func GetBackendRoleRoutes(adminID, roleID int) (routes []*models.RoleRouteBackend, err error) {
+	if IsSuperAdmin(adminID) {
+		db.DB.Where("role_id = ?", roleID).Order("id asc").Find(&routes)
+		return routes, nil
+	} else {
+		return nil, ErrNeedSuperAdmin
+	}
 }
 
 func CreateBackendRoleRoutes(adminID int, roleID int, route string) (*models.RoleRouteBackend, error) {
@@ -50,8 +54,7 @@ func DelBackendRoleRoute(adminID, roleID int, route string) error {
 	}
 }
 
-func GetAdminBackendRoleRoutes(adminID int) (routes []*models.RoleRouteBackend) {
+func CheckAdminBackendRoleRoute(adminID int, route string) bool {
 	qexp := db.DB.Model(&models.AdminRole{}).Where("admin_id=?", adminID).Select("role_id")
-	db.DB.Where("role_id in ?", qexp).Order("id asc").Find(&routes)
-	return routes
+	return IsIDExist(db.DB.Model(&models.RoleRouteBackend{}).Where("route=? AND role_id in ?", qexp, route))
 }

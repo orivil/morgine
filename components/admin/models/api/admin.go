@@ -25,6 +25,18 @@ var (
 	ErrOnlyCanCreateOwnSubAccount = errors.New("只能创建属于自己的子账号")
 )
 
+func RegisterSuperAdmin(username, nickname, password string) (admin *models.Admin, err error) {
+	if IsIDExist(db.DB.Model(&models.Admin{})) {
+
+	}
+	admin = &models.Admin {
+		Username:  username,
+		Nickname:  nickname,
+		Password:  password,
+	}
+	db.DB.Create(admin)
+}
+
 // 创建子管理员
 func CreateSubAdmin(loginID, parentID int, admin *models.Admin) error {
 	admin.ID = 0

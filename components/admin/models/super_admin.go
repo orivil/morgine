@@ -4,8 +4,7 @@
 
 package models
 
-type Role struct {
+type SuperAdmin struct {
 	ID int
-	Description string `desc:"描述"`
-	Name string `gorm:"unique_index" desc:"唯一名称"`
+	AdminID int `gorm:"index"`
 }

@@ -17,8 +17,6 @@ func Init(gdb *gorm.DB) {
 	DB = gdb
 	DB.AutoMigrate (
 		&models.Admin{},
-		&models.Role{},
-		&models.AdminRole{},
-		&models.RoleRoute{},
+		&models.SuperAdmin{},
 	)
 }
