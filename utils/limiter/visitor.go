@@ -7,8 +7,9 @@ package limiter
 import (
 	"golang.org/x/time/rate"
 	"sync"
-	"time"
 )
+
+type RateLimiterProvider func() *rate.Limiter
 
 type visitor struct {
 	session string
@@ -17,12 +18,14 @@ type visitor struct {
 
 type VisitorContainer struct {
 	visitors map[string]*visitor
+	limiter RateLimiterProvider
 	mu sync.Mutex
 }
 
-func NewVisitorContainer() *VisitorContainer {
+func NewVisitorContainer(limiter RateLimiterProvider) *VisitorContainer {
 	return &VisitorContainer{
 		visitors: make(map[string]*visitor, 100),
+		limiter: limiter,
 	}
 }
 
@@ -34,7 +37,7 @@ func (vc *VisitorContainer) Allow(session string) bool {
 	if vis == nil {
 		vis = &visitor {
 			session:          session,
-			limiter:      rate.NewLimiter(rate.Every(time.Millisecond * 50), 1), // 1秒钟超过 20 次触发等待
+			limiter:      vc.limiter(),
 		}
 		vc.visitors[session] = vis
 		return true

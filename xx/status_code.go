@@ -11,17 +11,21 @@ import (
 
 const (
 	// 可根据需要自定义状态码
-	StatusSuccess StatusCode = 2000
-	StatusNotFound StatusCode = 2404
+	StatusSuccess      StatusCode = 2000
+	StatusFailed       StatusCode = 2400
+	StatusForbidden    StatusCode = 2403
+	StatusNotFound     StatusCode = 2404
 	StatusUnauthorized StatusCode = 2401
 )
 
 // 注册状态码
 func init() {
 	defaultNamespace := StatusCodes.Namespace(DefaultStatusNamespace)
-	defaultNamespace.InitStatus(StatusSuccess,"Success")
+	defaultNamespace.InitStatus(StatusSuccess, "Success")
+	defaultNamespace.InitStatus(StatusFailed, "Failed")
+	defaultNamespace.InitStatus(StatusForbidden, "Forbidden")
 	defaultNamespace.InitStatus(StatusNotFound, "NotFound")
-	defaultNamespace.InitStatus(StatusUnauthorized,"Unauthorized")
+	defaultNamespace.InitStatus(StatusUnauthorized, "Unauthorized")
 }
 
 const DefaultStatusNamespace = ""
@@ -32,7 +36,7 @@ var StatusCodes = NewStatusCodes()
 
 // 带状态的数据类型，便于前端判断数据处理方式
 type StatusData struct {
-	Code StatusCode `json:"code" xml:"code"`
+	Code StatusCode  `json:"code" xml:"code"`
 	Data interface{} `json:"data" xml:"data"`
 }
 
@@ -40,7 +44,7 @@ type StatusTexts map[StatusCode][]string
 
 type statusCodes struct {
 	spaces map[string]*namespaceStatusCodes
-	mu sync.Mutex
+	mu     sync.Mutex
 }
 
 func (sc *statusCodes) StatusTexts() StatusTexts {
@@ -88,7 +92,7 @@ func (sc *statusCodes) Namespace(namespace string) *namespaceStatusCodes {
 	defer sc.mu.Unlock()
 	space, ok := sc.spaces[namespace]
 	if !ok {
-		space = &namespaceStatusCodes {
+		space = &namespaceStatusCodes{
 			Namespace: namespace,
 			Codes:     make(map[StatusCode]string, 5),
 		}
@@ -99,8 +103,8 @@ func (sc *statusCodes) Namespace(namespace string) *namespaceStatusCodes {
 
 type namespaceStatusCodes struct {
 	Namespace string
-	Codes map[StatusCode]string
-	mu sync.Mutex
+	Codes     map[StatusCode]string
+	mu        sync.Mutex
 }
 
 func (s *namespaceStatusCodes) StatusText(code StatusCode) string {

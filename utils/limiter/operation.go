@@ -15,22 +15,25 @@ type user struct {
 	waitAt *time.Time
 }
 
-type WaitTimeProvider interface {
+type TimeProvider interface {
 	// 获得失败 failed 次数之后的等待时间
 	GetWaitTime(failed int) time.Duration
+
+	// 获得当前时间
+	GetNowTime() time.Time
 }
 
 // OperationContainer 用于操作失败检测，例如用户登录失败记录，验证吗检测失败记录等
 type OperationContainer struct {
 	users map[string]*user
-	waitTime WaitTimeProvider
+	timeProvider TimeProvider
 	mu sync.Mutex
 }
 
-func NewOperationContainer(waitTime WaitTimeProvider) *OperationContainer {
+func NewOperationContainer(timeProvider TimeProvider) *OperationContainer {
 	return &OperationContainer {
 		users:    make(map[string]*user, 50),
-		waitTime: waitTime,
+		timeProvider: timeProvider,
 		mu:       sync.Mutex{},
 	}
 }
@@ -43,7 +46,7 @@ func (uc *OperationContainer) Success(session string) {
 }
 
 // 添加失败记录，获得等待时间
-func (uc *OperationContainer) Failed(session string) (waitAt *time.Time) {
+func (uc *OperationContainer) Failed(session string) {
 	uc.mu.Lock()
 	defer uc.mu.Unlock()
 	usr := uc.users[session]
@@ -56,9 +59,13 @@ func (uc *OperationContainer) Failed(session string) (waitAt *time.Time) {
 	} else {
 		usr.failed++
 	}
-	wa := time.Now().Add(uc.waitTime.GetWaitTime(usr.failed))
-	usr.waitAt = &wa
-	return usr.waitAt
+	waitDuration := uc.timeProvider.GetWaitTime(usr.failed)
+	if waitDuration > 0 {
+		wa := uc.timeProvider.GetNowTime().Add(waitDuration)
+		usr.waitAt = &wa
+	} else {
+		usr.waitAt = nil
+	}
 }
 
 // 检测当前时间是否允许操作
@@ -66,9 +73,21 @@ func (uc *OperationContainer) Allow(session string) bool {
 	uc.mu.Lock()
 	defer uc.mu.Unlock()
 	usr := uc.users[session]
-	if usr != nil {
-		return usr.waitAt.After(time.Now())
+	if usr != nil && usr.waitAt != nil {
+		return usr.waitAt.Before(uc.timeProvider.GetNowTime())
 	} else {
 		return true
+	}
+}
+
+// 获得用户等待时间
+func (uc *OperationContainer) GetWaitTime(session string) (waitAt *time.Time) {
+	uc.mu.Lock()
+	defer uc.mu.Unlock()
+	usr := uc.users[session]
+	if usr == nil {
+		return nil
+	} else {
+		return usr.waitAt
 	}
 }
